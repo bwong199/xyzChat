@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/country" android:layout_gravity="center_horizontal"
         android:text="Country"
-        android:layout_below="@+id/addressTV" android:layout_centerHorizontal="true"/>
+        android:layout_alignTop="@+id/userEmail" android:layout_centerHorizontal="true"/>
     <TextView
         android:layout_width="116dp"
         android:layout_height="wrap_content"
@@ -25,4 +25,9 @@
         android:layout_below="@+id/userEmail" android:layout_alignStart="@+id/userEmail"
         android:layout_alignWithParentIfMissing="false" android:layout_alignParentRight="true"
         android:gravity="right" android:layout_margin="10dp"/>
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/listView"
+        android:layout_centerHorizontal="true" android:layout_below="@+id/addressTV"/>
 </RelativeLayout>

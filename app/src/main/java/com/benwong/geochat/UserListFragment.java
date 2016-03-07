@@ -20,7 +20,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -34,10 +36,8 @@ import com.firebase.geofire.GeoQueryEventListener;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 /**
  * Created by benwong on 2016-03-04.
@@ -52,8 +52,9 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
     private Location location;
     private GeoFire geoFire;
     private TextView addressTV;
-    private List<User> mUsers = new ArrayList<>();
-    private String userCountry;
+    List<User> nearByUsersList;
+    ListView myListView;
+    ArrayAdapter<User> arrayAdapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -69,26 +70,28 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
         ref.child("email").setValue(intent.getStringExtra("loginEmail"));
 
         country = (TextView) view.findViewById(R.id.country);
-        addressTV = (TextView)view.findViewById(R.id.addressTV);
+        addressTV = (TextView) view.findViewById(R.id.addressTV);
+        myListView = (ListView) view.findViewById(R.id.listView);
 
+        nearByUsersList = new ArrayList<User>();
 
         ref = new Firebase("https://originchat.firebaseio.com/users/" + intent.getStringExtra("userId") + "/country");
 
         Query queryRef = ref.orderByChild("country");
 
-        //force user to set country if it's not set in the database
+
         queryRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.i("userCountry", String.valueOf(dataSnapshot.getValue()));
-
                 try {
+                    //force user to set country if it's not set in the database
                     if (dataSnapshot.getValue() == null) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                         selectCountryAlert();
+
                     } else {
                         country.setText(String.valueOf(dataSnapshot.getValue()));
-                        userCountry = String.valueOf(dataSnapshot.getValue());
+                        queryForUsers(String.valueOf(dataSnapshot.getValue()));
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -122,12 +125,26 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 
         location = locationManager.getLastKnownLocation(provider);
 
-        onLocationChanged(location);
+        boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+        if (enabled) {
+            onLocationChanged(location);
+        } else {
+            Toast.makeText(getActivity(), "Please turn on GPS", Toast.LENGTH_LONG).show();
+        }
 
 
-        final Set<String> usersNearby = new HashSet<String>();
 
-        //query geolocation
+
+
+
+
+
+        return view;
+    }
+
+    private void queryForUsers(final String userCountry) {
+        //query geolocation to find nearbyUsers
         geoFire = new GeoFire(new Firebase("https://originchat.firebaseio.com/locations/"));
 
         GeoLocation center = new GeoLocation(location.getLatitude(), location.getLongitude());
@@ -135,26 +152,44 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
         GeoQuery geoQuery = geoFire.queryAtLocation(center, 5);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
-            public void onKeyEntered(String username, GeoLocation location) {
-                usersNearby.add(username);
-                // additional code, like displaying a pin on the map
-                // and adding Firebase listeners for this user
-                Log.i("nearby", String.valueOf(usersNearby));
+            public void onKeyEntered(String username, final GeoLocation location) {
+                //query by country within the list of nearby users
+                ref = new Firebase("https://originchat.firebaseio.com/users/" + username);
 
-                for (String user : usersNearby) {
-                    System.out.println(user);
-                    Log.i("nearbyUser", user);
+                ref.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
 
-                    ref = new Firebase("https://originchat.firebaseio.com/users/" + user );
+//                        System.out.println(dataSnapshot.child("country").getValue());
 
-                    Query queryCountryRef = ref.orderByChild("country").equalTo()
-                }
+                        if(dataSnapshot.child("country").getValue().toString().equals(userCountry)){
+                            User usersFromHome = new User();
+                            usersFromHome.setCountry(String.valueOf(dataSnapshot.child("country").getValue()));
+                            usersFromHome.setEmail(String.valueOf(dataSnapshot.child("email").getValue()));
+                            usersFromHome.setUserId(dataSnapshot.getKey());
+                            usersFromHome.setUserLatitude(String.valueOf(location.latitude));
+                            usersFromHome.setUserLongitude(String.valueOf(location.longitude));
+                            System.out.println("nearByUsers " + usersFromHome.getEmail() + " is from " + usersFromHome.getCountry());
+                            nearByUsersList.add(usersFromHome);
+                        }
+
+                        if (nearByUsersList != null) {
+                            arrayAdapter = new ArrayAdapter<User>(getActivity(), android.R.layout.simple_list_item_1, nearByUsersList);
+                            myListView.setAdapter(arrayAdapter);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
+
+                    }
+                });
 
             }
 
             @Override
             public void onKeyExited(String username) {
-                usersNearby.remove(username);
+                nearByUsersList.remove(username);
                 // additional code, like removing a pin from the map
                 // and removing any Firebase listener for this user
             }
@@ -173,21 +208,20 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
             public void onGeoQueryError(FirebaseError firebaseError) {
 
             }
-        });
 
-             return view;
+        });
     }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.country:
                 selectCountryAlert();
         }
 
     }
 
-    private void selectCountryAlert(){
+    private void selectCountryAlert() {
         AlertDialog.Builder builderSingle = new AlertDialog.Builder(getActivity());
 
         builderSingle.setTitle("Select Country of Origin");
@@ -197,7 +231,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                 android.R.layout.select_dialog_singlechoice);
 
         String[] isoCountries = Locale.getISOCountries();
-        System.out.println(Locale.getISOCountries());
+
         for (String country : isoCountries) {
             Locale locale = new Locale("en", country);
 
@@ -241,6 +275,8 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                         ref = new Firebase("https://originchat.firebaseio.com/");
 
                         ref.child("users").child(intent.getStringExtra("userId")).child("country").setValue(strName);
+
+                        queryForUsers(strName);
                     }
                 });
         builderSingle.show();
@@ -249,34 +285,32 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 
     @Override
     public void onLocationChanged(Location location) {
-        if (location != null){
-
-            Log.i("geoLocation", String.valueOf(location.getLatitude())  + String.valueOf(location.getLongitude()) );
-            geoFire = new GeoFire(new Firebase("https://originchat.firebaseio.com/locations/"  ));
+        if (location != null) {
+//            Log.i("geoLocation", String.valueOf(location.getLatitude())  + String.valueOf(location.getLongitude()) );
+            geoFire = new GeoFire(new Firebase("https://originchat.firebaseio.com/locations/"));
             geoFire.setLocation(intent.getStringExtra("userId"), new GeoLocation(location.getLatitude(), location.getLongitude()));
-        }
 
-        Geocoder geocoder = new Geocoder(getActivity(), Locale.getDefault());
-        List<Address> listAddresses = null;
-        try {
-            listAddresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        if (listAddresses != null && listAddresses.size() > 0) {
-            Log.i("PlaceInfo", listAddresses.get(0).toString());
-
-            String addressHolder = "";
-
-            for (int i = 0; i <= listAddresses.get(0).getMaxAddressLineIndex(); i++) {
-
-                addressHolder += listAddresses.get(0).getAddressLine(i) + "\n";
-                Log.i("address", addressHolder);
+            Geocoder geocoder = new Geocoder(getActivity(), Locale.getDefault());
+            List<Address> listAddresses = null;
+            try {
+                listAddresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            addressTV.setText(addressHolder + "\n" );
-        }
 
+            if (listAddresses != null && listAddresses.size() > 0) {
+//            Log.i("PlaceInfo", listAddresses.get(0).toString());
+
+                String addressHolder = "";
+
+                for (int i = 0; i <= listAddresses.get(0).getMaxAddressLineIndex(); i++) {
+
+                    addressHolder += listAddresses.get(0).getAddressLine(i) + "\n";
+                    Log.i("address", addressHolder);
+                }
+                addressTV.setText(addressHolder + "\n");
+            }
+        }
     }
 
     @Override
