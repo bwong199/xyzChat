@@ -10,8 +10,26 @@ public class User {
     private String id;
     private String userLatitude;
     private String userLongitude;
+    private Float distanceToUser;
+
 
     public User() {
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public Float getDistanceToUser() {
+        return distanceToUser;
+    }
+
+    public void setDistanceToUser(Float distanceToUser) {
+        this.distanceToUser = distanceToUser;
     }
 
     public String getUserId() {

@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 
@@ -84,9 +85,29 @@ public class RegisterFragment extends Fragment implements View.OnClickListener{
 
 
                 Toast.makeText(getContext(), "User successfully created.", Toast.LENGTH_LONG).show();
-                Intent intent = new Intent(getActivity(), MainActivity.class);
-                intent.putExtra("loginEmail", emailRegister.getText().toString());
-                startActivity(intent);
+//                Intent intent = new Intent(getActivity(), MainActivity.class);
+//                intent.putExtra("loginEmail", emailRegister.getText().toString());
+//                startActivity(intent);
+
+                ref.authWithPassword(emailRegister.getText().toString(), passwordRegister.getText().toString(), new Firebase.AuthResultHandler() {
+                    @Override
+                    public void onAuthenticated(AuthData authData) {
+                        System.out.println("User ID: " + authData.getUid() + ", Provider: " + authData.getProvider());
+                        Toast.makeText(getContext(), "Logged in Successfully", Toast.LENGTH_LONG).show();
+
+                        Intent intent = new Intent(getActivity(), UserListActivity.class);
+                        intent.putExtra("loginEmail", emailRegister.getText().toString());
+                        intent.putExtra("userId", authData.getUid());
+                        startActivity(intent);
+                    }
+
+                    @Override
+                    public void onAuthenticationError(FirebaseError firebaseError) {
+                        // there was an error
+                        Toast.makeText(getContext(), "Error logging in", Toast.LENGTH_LONG).show();
+                        System.out.println(firebaseError);
+                    }
+                });
             }
 
             @Override
