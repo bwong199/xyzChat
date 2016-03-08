@@ -170,7 +170,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
 
-                        System.out.println(dataSnapshot.child("country").getValue());
+//                        System.out.println(dataSnapshot.child("country").getValue());
 
                         if (dataSnapshot.child("country").getValue().toString().equals(userCountry) && !(dataSnapshot.getKey().toString().equals(Constant.USERID))) {
                             User usersFromHome = new User();
@@ -205,11 +205,8 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                             //putting items into an individual holder which gets fed into an adapter
                             class UserHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-                                TextView mEmailTV;
+                                private User mUser;
                                 TextView mCountryTV;
-                                TextView mId;
-                                TextView mLatitude;
-                                TextView mLongitude;
                                 TextView mDistanceAway;
                                 ImageView mProfilePic;
                                 TextView mUsername;
@@ -217,7 +214,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                 public UserHolder(View itemView) {
                                     super(itemView);
 
-
+                                    itemView.setOnClickListener(this);
                                     mCountryTV = (TextView) itemView.findViewById(R.id.usernameTV);
 
                                     mDistanceAway = (TextView) itemView.findViewById(R.id.distanceAwayTV);
@@ -226,13 +223,12 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                 }
 
                                 public void bindUserItem(User user) {
+                                    mUser = user;
 //                                    mEmailTV.setText(user.getEmail());
 //                                    mCountryTV.setText(user.getCountry());
 //                                    mId.setText(user.getUserId());
 //                                    mLatitude.setText(user.getUserLatitude());
 //                                    mLongitude.setText(user.getUserLongitude());
-
-
                                     byte[] imageAsBytes = Base64.decode(user.getImage(), Base64.DEFAULT);
                                     Bitmap bmp = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
                                     mUsername.setText(user.getUsername());
@@ -242,7 +238,9 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 
                                 @Override
                                 public void onClick(View v) {
-                                    Intent intent = new Intent(getActivity(), )
+                                    Intent intent = new Intent(getActivity(), UserDetailActivity.class);
+                                    intent.putExtra("userId", mUser.getId());
+                                    startActivity(intent);
                                 }
                             }
 
@@ -400,7 +398,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
     public void onLocationChanged(Location location) {
         if (location != null) {
             try {
-                System.out.println(location.getLatitude() + " " + location.getLongitude());
+//                System.out.println(location.getLatitude() + " " + location.getLongitude());
                 userLocation = new Location("");
                 userLocation.setLatitude(location.getLatitude());
                 userLocation.setLongitude(location.getLongitude());

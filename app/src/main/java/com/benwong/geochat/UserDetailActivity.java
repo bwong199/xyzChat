@@ -7,11 +7,11 @@ import android.view.MenuItem;
 
 import com.firebase.client.Firebase;
 
-public class UserListActivity extends SingleFragmentActivity {
+public class UserDetailActivity extends SingleFragmentActivity {
     Firebase ref;
     @Override
     protected Fragment createFragment() {
-        return new UserListFragment();
+        return new UserDetailFragment();
     }
 
     @Override
@@ -34,7 +34,6 @@ public class UserListActivity extends SingleFragmentActivity {
             ref = new Firebase("https://originchat.firebaseio.com/");
             ref.unauth();
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-
             startActivity(intent);
         }
 

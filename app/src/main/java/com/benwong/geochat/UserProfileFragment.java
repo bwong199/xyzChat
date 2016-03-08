@@ -28,8 +28,6 @@ import java.io.IOException;
  * A placeholder fragment containing a simple view.
  */
 public class UserProfileFragment extends Fragment {
-
-
     private EditText emailET;
     private EditText usernameET;
     private EditText userDescriptionET;
@@ -38,11 +36,7 @@ public class UserProfileFragment extends Fragment {
     private ImageView attachmentBtn;
     String profileImage;
     private ImageView profilePic;
-
-
     Firebase ref;
-
-
 
     public UserProfileFragment() {
     }
@@ -112,7 +106,7 @@ public class UserProfileFragment extends Fragment {
 
                 // change email
 
-                if (! (Constant.USEREMAIL.equals(emailET.getText().toString()))){
+                if (! (Constant.USEREMAIL.equals(emailET.getText().toString())) && !(emailET.getText().equals("")) ){
                     ref = new Firebase("https://originchat.firebaseio.com/");
                     ref.changeEmail(Constant.USEREMAIL, passwordET.getText().toString(), emailET.getText().toString(), new Firebase.ResultHandler() {
                         @Override
