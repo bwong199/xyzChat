@@ -11,9 +11,28 @@ public class User {
     private String userLatitude;
     private String userLongitude;
     private Float distanceToUser;
+    private String image;
+    private String username;
 
 
     public User() {
+    }
+
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
     }
 
     public String getId() {

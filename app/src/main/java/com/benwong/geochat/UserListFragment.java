@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
@@ -17,11 +19,13 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -60,6 +64,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
     private RecyclerView mPhotoRecyclerView;
     private Location userLocation;
     float distanceToUser;
+    private ImageView profileImageView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -70,17 +75,18 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
         userEmail = (TextView) view.findViewById(R.id.userEmail);
         intent = getActivity().getIntent();
 
-        userEmail.setText(intent.getStringExtra("loginEmail"));
-        ref = new Firebase("https://originchat.firebaseio.com/users/" + intent.getStringExtra("userId"));
+        userEmail.setText(Constant.USEREMAIL);
+        ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID);
         ref.child("email").setValue(intent.getStringExtra("loginEmail"));
 
         country = (TextView) view.findViewById(R.id.country);
         addressTV = (TextView) view.findViewById(R.id.addressTV);
 //        myListView = (ListView) view.findViewById(R.id.listView);
+        profileImageView = (ImageView)view.findViewById(R.id.imageView);
 
         nearByUsersList = new ArrayList<User>();
 
-        ref = new Firebase("https://originchat.firebaseio.com/users/" + intent.getStringExtra("userId") + "/country");
+        ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID + "/country");
 
         mPhotoRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_photo_gallery_recycler_view);
         mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
@@ -107,8 +113,13 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 
         boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
-        if (enabled) {
-            onLocationChanged(location);
+        if (enabled && location != null) {
+            try {
+                onLocationChanged(location);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+
         } else {
             Toast.makeText(getActivity(), "Please turn on GPS", Toast.LENGTH_LONG).show();
         }
@@ -159,15 +170,18 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
 
-//                        System.out.println(dataSnapshot.child("country").getValue());
+                        System.out.println(dataSnapshot.child("country").getValue());
 
-                        if (dataSnapshot.child("country").getValue().toString().equals(userCountry) && !(dataSnapshot.getKey().toString().equals(intent.getStringExtra("userId")))) {
+                        if (dataSnapshot.child("country").getValue().toString().equals(userCountry) && !(dataSnapshot.getKey().toString().equals(Constant.USERID))) {
                             User usersFromHome = new User();
                             usersFromHome.setCountry(String.valueOf(dataSnapshot.child("country").getValue()));
                             usersFromHome.setEmail(String.valueOf(dataSnapshot.child("email").getValue()));
                             usersFromHome.setUserId(dataSnapshot.getKey());
+                            usersFromHome.setImage(String.valueOf(dataSnapshot.child("profilePic").getValue()));
+                            usersFromHome.setUsername(String.valueOf(dataSnapshot.child("username").getValue()));
                             usersFromHome.setUserLatitude(String.valueOf(nearbyLocation.latitude));
                             usersFromHome.setUserLongitude(String.valueOf(nearbyLocation.longitude));
+
 
                             //calculates distance to from the current user to the list of other nearby users
 
@@ -177,20 +191,19 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                 loc.setLatitude(nearbyLocation.latitude);
                                 loc.setLongitude(nearbyLocation.longitude);
 
-                                distanceToUser = userLocation.distanceTo(loc);
+                                distanceToUser = userLocation.distanceTo(loc) / 1000;
                                 usersFromHome.setDistanceToUser(distanceToUser);
-
 
                             } else {
                                 distanceToUser = (float) 0.0;
                             }
 
 
-                            System.out.println("nearByUsers " + usersFromHome.getEmail() + " is from " + usersFromHome.getCountry() + " is " + distanceToUser + " meters away");
+                            System.out.println("nearByUsers " + usersFromHome.getEmail() + " is from " + usersFromHome.getCountry() + " is " + distanceToUser + " km away");
                             nearByUsersList.add(usersFromHome);
 
                             //putting items into an individual holder which gets fed into an adapter
-                            class UserHolder extends RecyclerView.ViewHolder {
+                            class UserHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
                                 TextView mEmailTV;
                                 TextView mCountryTV;
@@ -198,26 +211,38 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                 TextView mLatitude;
                                 TextView mLongitude;
                                 TextView mDistanceAway;
+                                ImageView mProfilePic;
+                                TextView mUsername;
 
                                 public UserHolder(View itemView) {
                                     super(itemView);
 
-                                    mEmailTV = (TextView) itemView.findViewById(R.id.emailTV);
-                                    mCountryTV = (TextView) itemView.findViewById(R.id.countryTV);
-                                    mId = (TextView) itemView.findViewById(R.id.idTV);
-                                    mLatitude = (TextView) itemView.findViewById(R.id.latitudeTV);
-                                    mLongitude = (TextView) itemView.findViewById(R.id.longitudeTV);
-                                    mDistanceAway = (TextView) itemView.findViewById(R.id.distanceAwayTV);
 
+                                    mCountryTV = (TextView) itemView.findViewById(R.id.usernameTV);
+
+                                    mDistanceAway = (TextView) itemView.findViewById(R.id.distanceAwayTV);
+                                    mProfilePic = (ImageView)itemView.findViewById(R.id.imageView);
+                                    mUsername = (TextView)itemView.findViewById(R.id.usernameTV);
                                 }
 
                                 public void bindUserItem(User user) {
-                                    mEmailTV.setText(user.getEmail());
-                                    mCountryTV.setText(user.getCountry());
-                                    mId.setText(user.getUserId());
-                                    mLatitude.setText(user.getUserLatitude());
-                                    mLongitude.setText(user.getUserLongitude());
-                                    mDistanceAway.setText(Float.toString(user.getDistanceToUser()) + " m away");
+//                                    mEmailTV.setText(user.getEmail());
+//                                    mCountryTV.setText(user.getCountry());
+//                                    mId.setText(user.getUserId());
+//                                    mLatitude.setText(user.getUserLatitude());
+//                                    mLongitude.setText(user.getUserLongitude());
+
+
+                                    byte[] imageAsBytes = Base64.decode(user.getImage(), Base64.DEFAULT);
+                                    Bitmap bmp = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
+                                    mUsername.setText(user.getUsername());
+                                    mProfilePic.setImageBitmap(bmp);
+                                    mDistanceAway.setText(Float.toString(user.getDistanceToUser()) + " km away");
+                                }
+
+                                @Override
+                                public void onClick(View v) {
+                                    Intent intent = new Intent(getActivity(), )
                                 }
                             }
 
@@ -253,6 +278,9 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                             if (isAdded()) {
                                 mPhotoRecyclerView.setAdapter(new UserAdapter(nearByUsersList));
                             }
+
+
+
                         }
 
 //                        if (nearByUsersList != null) {
@@ -295,6 +323,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 
         });
     }
+
 
     @Override
     public void onClick(View v) {
@@ -358,7 +387,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 
                         ref = new Firebase("https://originchat.firebaseio.com/");
 
-                        ref.child("users").child(intent.getStringExtra("userId")).child("country").setValue(strName);
+                        ref.child("users").child(Constant.USERID).child("country").setValue(strName);
 
                         queryForUsers(strName);
                     }
@@ -382,7 +411,10 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 
 //            Log.i("geoLocation", String.valueOf(location.getLatitude())  + String.valueOf(location.getLongitude()) );
             geoFire = new GeoFire(new Firebase("https://originchat.firebaseio.com/locations/"));
-            geoFire.setLocation(intent.getStringExtra("userId"), new GeoLocation(location.getLatitude(), location.getLongitude()));
+            if(location!= null){
+                geoFire.setLocation(Constant.USERID, new GeoLocation(location.getLatitude(), location.getLongitude()));
+
+            }
 
             Geocoder geocoder = new Geocoder(getActivity(), Locale.getDefault());
             List<Address> listAddresses = null;

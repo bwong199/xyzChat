@@ -21,6 +21,7 @@ import com.firebase.client.FirebaseError;
  */
 public class LoginFragment extends Fragment implements View.OnClickListener {
 
+
     private TextView registerLink;
 
     private EditText emailLogin;
@@ -85,6 +86,9 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
             public void onAuthenticated(AuthData authData) {
                 System.out.println("User ID: " + authData.getUid() + ", Provider: " + authData.getProvider());
                 Toast.makeText(getContext(), "Logged in Successfully", Toast.LENGTH_LONG).show();
+                Constant.USERID = authData.getUid();
+                Constant.USEREMAIL = emailLogin.getText().toString();
+                Constant.USERPASSWORD = passwordLogin.getText().toString();
 
                 Intent intent = new Intent(getActivity(), UserListActivity.class);
                 intent.putExtra("loginEmail", emailLogin.getText().toString());
@@ -94,8 +98,22 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
             @Override
             public void onAuthenticationError(FirebaseError firebaseError) {
                 // there was an error
-                Toast.makeText(getContext(), "Error logging in", Toast.LENGTH_LONG).show();
-                System.out.println(firebaseError);
+                System.out.println(firebaseError.getMessage());
+                System.out.println(firebaseError.getDetails());
+
+                switch (firebaseError.getCode()) {
+                    case FirebaseError.USER_DOES_NOT_EXIST:
+                        Toast.makeText(getContext(), "User does not exist", Toast.LENGTH_LONG).show();
+                        // handle a non existing user
+                        break;
+                    case FirebaseError.INVALID_PASSWORD:
+                        Toast.makeText(getContext(), "Invalid password entered", Toast.LENGTH_LONG).show();
+                        // handle an invalid password
+                        break;
+                      default:
+                        // handle other errors
+                        break;
+                }
             }
         });
     }

@@ -94,7 +94,9 @@ public class RegisterFragment extends Fragment implements View.OnClickListener{
                     public void onAuthenticated(AuthData authData) {
                         System.out.println("User ID: " + authData.getUid() + ", Provider: " + authData.getProvider());
                         Toast.makeText(getContext(), "Logged in Successfully", Toast.LENGTH_LONG).show();
-
+                        Constant.USERID = authData.getUid();
+                        Constant.USEREMAIL = emailRegister.getText().toString();
+                        Constant.USERPASSWORD = passwordRegister.getText().toString();
                         Intent intent = new Intent(getActivity(), UserListActivity.class);
                         intent.putExtra("loginEmail", emailRegister.getText().toString());
                         intent.putExtra("userId", authData.getUid());

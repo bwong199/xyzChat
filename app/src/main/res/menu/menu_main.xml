@@ -2,8 +2,17 @@
       xmlns:app="http://schemas.android.com/apk/res-auto"
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="com.benwong.geochat.MainActivity">
-    <item android:id="@+id/action_settings"
+    <item android:id="@+id/userProfile"
           android:orderInCategory="100"
-          android:title="@string/action_settings"
+          android:title="User Profile"
           app:showAsAction="never"/>
+    <item android:id="@+id/myMessages"
+          android:orderInCategory="100"
+          android:title="Messages"
+          app:showAsAction="never"/>
+    <item android:id="@+id/signOut"
+          android:orderInCategory="100"
+          android:title="Sign Out"
+          app:showAsAction="never"/>
+
 </menu>

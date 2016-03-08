@@ -7,11 +7,12 @@ import android.view.MenuItem;
 
 import com.firebase.client.Firebase;
 
-public class UserListActivity extends SingleFragmentActivity {
+public class UserProfileActivity extends SingleFragmentActivity {
     Firebase ref;
-    @Override
+
+
     protected Fragment createFragment() {
-        return new UserListFragment();
+        return new UserProfileFragment();
     }
 
     @Override
@@ -38,5 +39,13 @@ public class UserListActivity extends SingleFragmentActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        System.out.println("Activity onActivityResult " + requestCode + " " +  resultCode  + " " + data);
+
     }
 }
