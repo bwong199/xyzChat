@@ -1,5 +1,7 @@
 package com.benwong.geochat;
 
+import com.shaded.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.Date;
 
 /**
@@ -10,6 +12,10 @@ public class Message implements Comparable<Message> {
     private String recipientId;
     private String message;
     private Date date;
+
+    @JsonIgnoreProperties(ignoreUnknown=true)
+    public Message() {
+    }
 
     public String getSenderId() {
         return senderId;

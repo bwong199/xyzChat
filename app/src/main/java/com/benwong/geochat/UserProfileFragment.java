@@ -1,5 +1,6 @@
 package com.benwong.geochat;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -7,13 +8,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.client.DataSnapshot;
@@ -23,6 +27,7 @@ import com.firebase.client.ValueEventListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -32,6 +37,9 @@ public class UserProfileFragment extends Fragment {
     private EditText usernameET;
     private EditText userDescriptionET;
     private EditText passwordET;
+    private TextView countryTV;
+
+
     private Button saveProfileBtn;
     private ImageView attachmentBtn;
     String profileImage;
@@ -53,6 +61,14 @@ public class UserProfileFragment extends Fragment {
         userDescriptionET = (EditText)view.findViewById(R.id.userDescriptionET);
         attachmentBtn = (ImageView)view.findViewById(R.id.attachment);
         profilePic = (ImageView)view.findViewById(R.id.profilePic);
+        countryTV = (TextView)view.findViewById(R.id.countryTV);
+
+        countryTV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                selectCountryAlert();
+            }
+        });
 
         ref.addValueEventListener(new ValueEventListener() {
             @Override
@@ -200,5 +216,65 @@ public class UserProfileFragment extends Fragment {
             Toast.makeText(getActivity(), "Error Uploading File", Toast.LENGTH_LONG).show();
         }
 
+    }
+
+    private void selectCountryAlert() {
+        AlertDialog.Builder builderSingle = new AlertDialog.Builder(getActivity());
+
+        builderSingle.setTitle("Select Country of Origin");
+
+        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+                getActivity(),
+                android.R.layout.select_dialog_singlechoice);
+
+        String[] isoCountries = Locale.getISOCountries();
+
+        for (String country : isoCountries) {
+            Locale locale = new Locale("en", country);
+
+            arrayAdapter.add(locale.getDisplayCountry().toString());
+        }
+
+
+        builderSingle.setNegativeButton(
+                "cancel",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        builderSingle.setAdapter(
+                arrayAdapter,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String strName = arrayAdapter.getItem(which);
+                        AlertDialog.Builder builderInner = new AlertDialog.Builder(
+                                getActivity());
+                        builderInner.setMessage(strName);
+                        builderInner.setTitle("Your Selected Item is");
+                        builderInner.setPositiveButton(
+                                "Ok",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(
+                                            DialogInterface dialog,
+                                            int which) {
+                                        dialog.dismiss();
+                                    }
+                                });
+                        builderInner.show();
+
+                        countryTV.setText(strName);
+
+                        ref = new Firebase("https://originchat.firebaseio.com/");
+
+                        ref.child("users").child(Constant.USERID).child("country").setValue(strName);
+
+                             }
+                });
+        builderSingle.show();
     }
 }

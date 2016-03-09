@@ -2,7 +2,6 @@ package com.benwong.geochat;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -16,7 +15,6 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
@@ -33,7 +31,6 @@ import android.widget.Toast;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
-import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -49,7 +46,7 @@ import java.util.Locale;
  * Created by benwong on 2016-03-04.
  */
 public class UserListFragment extends Fragment implements View.OnClickListener, LocationListener {
-    private TextView userEmail;
+    private TextView usernameTV;
     private TextView country;
     private Firebase ref;
     private Intent intent;
@@ -71,25 +68,29 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_user_list, container, false);
+//
 
-        userEmail = (TextView) view.findViewById(R.id.userEmail);
+        usernameTV = (TextView) view.findViewById(R.id.usernameTV);
+
+        //force user to set country and username if it's not set in the database
+
+
         intent = getActivity().getIntent();
 
-        userEmail.setText(Constant.USEREMAIL);
+//        userEmail.setText(Constant.USEREMAIL);
         ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID);
         ref.child("email").setValue(intent.getStringExtra("loginEmail"));
 
         country = (TextView) view.findViewById(R.id.country);
         addressTV = (TextView) view.findViewById(R.id.addressTV);
 //        myListView = (ListView) view.findViewById(R.id.listView);
-        profileImageView = (ImageView)view.findViewById(R.id.imageView);
+        profileImageView = (ImageView) view.findViewById(R.id.imageView);
 
         nearByUsersList = new ArrayList<User>();
 
-        ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID + "/country");
 
         mPhotoRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_photo_gallery_recycler_view);
-        mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+        mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 4));
 
         country.setOnClickListener(this);
 
@@ -116,7 +117,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
         if (enabled && location != null) {
             try {
                 onLocationChanged(location);
-            }catch(Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 
@@ -124,22 +125,23 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
             Toast.makeText(getActivity(), "Please turn on GPS", Toast.LENGTH_LONG).show();
         }
 
+        ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID );
         //query for user's home country
-        Query queryRef = ref.orderByChild("country");
 
-        queryRef.addValueEventListener(new ValueEventListener() {
+        ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 try {
-                    //force user to set country if it's not set in the database
-                    if (dataSnapshot.getValue() == null) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                        selectCountryAlert();
 
-                    } else {
-                        country.setText(String.valueOf(dataSnapshot.getValue()));
-                        queryForUsers(String.valueOf(dataSnapshot.getValue()));
+                    country.setText(String.valueOf(dataSnapshot.child("country").getValue()));
+                    usernameTV.setText(String.valueOf(dataSnapshot.child("username").getValue()));
+                    queryForUsers(String.valueOf(dataSnapshot.child("country").getValue()));
+
+                    if (dataSnapshot.child("country").getValue() == null || dataSnapshot.child("username").getValue() == null ) {
+                        Intent intent = new Intent(getActivity(), UserProfileActivity.class);
+                        startActivity(intent);
                     }
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -162,7 +164,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
         GeoQuery geoQuery = geoFire.queryAtLocation(center, 5);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
-            public void onKeyEntered(String username,  final GeoLocation nearbyLocation) {
+            public void onKeyEntered(String username, final GeoLocation nearbyLocation) {
                 //query by country within the list of nearby users
                 ref = new Firebase("https://originchat.firebaseio.com/users/" + username);
 
@@ -218,8 +220,8 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                     mCountryTV = (TextView) itemView.findViewById(R.id.usernameTV);
 
                                     mDistanceAway = (TextView) itemView.findViewById(R.id.distanceAwayTV);
-                                    mProfilePic = (ImageView)itemView.findViewById(R.id.imageView);
-                                    mUsername = (TextView)itemView.findViewById(R.id.usernameTV);
+                                    mProfilePic = (ImageView) itemView.findViewById(R.id.imageView);
+                                    mUsername = (TextView) itemView.findViewById(R.id.usernameTV);
                                 }
 
                                 public void bindUserItem(User user) {
@@ -232,7 +234,15 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                     byte[] imageAsBytes = Base64.decode(user.getImage(), Base64.DEFAULT);
                                     Bitmap bmp = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
                                     mUsername.setText(user.getUsername());
-                                    mProfilePic.setImageBitmap(bmp);
+                                    if (bmp != null) {
+                                        mProfilePic.setImageBitmap(bmp);
+                                    } else {
+                                        Bitmap icon = BitmapFactory.decodeResource(getActivity().getResources(),
+                                                R.drawable.unknownuser);
+                                        mProfilePic.setImageBitmap(icon);
+                                    }
+
+
                                     mDistanceAway.setText(Float.toString(user.getDistanceToUser()) + " km away");
                                 }
 
@@ -276,7 +286,6 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                             if (isAdded()) {
                                 mPhotoRecyclerView.setAdapter(new UserAdapter(nearByUsersList));
                             }
-
 
 
                         }
@@ -325,72 +334,8 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.country:
-                selectCountryAlert();
-        }
-
-    }
-
-    private void selectCountryAlert() {
-        AlertDialog.Builder builderSingle = new AlertDialog.Builder(getActivity());
-
-        builderSingle.setTitle("Select Country of Origin");
-
-        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
-                getActivity(),
-                android.R.layout.select_dialog_singlechoice);
-
-        String[] isoCountries = Locale.getISOCountries();
-
-        for (String country : isoCountries) {
-            Locale locale = new Locale("en", country);
-
-            arrayAdapter.add(locale.getDisplayCountry().toString());
-        }
 
 
-        builderSingle.setNegativeButton(
-                "cancel",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-
-        builderSingle.setAdapter(
-                arrayAdapter,
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String strName = arrayAdapter.getItem(which);
-                        AlertDialog.Builder builderInner = new AlertDialog.Builder(
-                                getActivity());
-                        builderInner.setMessage(strName);
-                        builderInner.setTitle("Your Selected Item is");
-                        builderInner.setPositiveButton(
-                                "Ok",
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(
-                                            DialogInterface dialog,
-                                            int which) {
-                                        dialog.dismiss();
-                                    }
-                                });
-                        builderInner.show();
-
-                        country.setText(strName);
-
-                        ref = new Firebase("https://originchat.firebaseio.com/");
-
-                        ref.child("users").child(Constant.USERID).child("country").setValue(strName);
-
-                        queryForUsers(strName);
-                    }
-                });
-        builderSingle.show();
     }
 
 
@@ -409,7 +354,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 
 //            Log.i("geoLocation", String.valueOf(location.getLatitude())  + String.valueOf(location.getLongitude()) );
             geoFire = new GeoFire(new Firebase("https://originchat.firebaseio.com/locations/"));
-            if(location!= null){
+            if (location != null) {
                 geoFire.setLocation(Constant.USERID, new GeoLocation(location.getLatitude(), location.getLongitude()));
 
             }

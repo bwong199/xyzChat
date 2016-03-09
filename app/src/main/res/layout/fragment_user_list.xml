@@ -7,7 +7,7 @@
     <TextView
         android:layout_width="116dp"
         android:layout_height="wrap_content"
-        android:id="@+id/userEmail" android:layout_gravity="right" android:text="New Text"
+        android:id="@+id/usernameTV" android:layout_gravity="right" android:text="Username"
         android:layout_alignParentTop="true" android:layout_alignParentEnd="true"
         android:layout_toEndOf="@+id/country" android:layout_alignParentRight="true"
         android:gravity="right" android:layout_margin="10dp"/>
@@ -16,13 +16,13 @@
         android:layout_height="wrap_content"
         android:id="@+id/country" android:layout_gravity="center_horizontal"
         android:text="Country"
-        android:layout_alignTop="@+id/userEmail" android:layout_centerHorizontal="true"/>
+        android:layout_alignTop="@+id/usernameTV" android:layout_centerHorizontal="true"/>
     <TextView
         android:layout_width="116dp"
         android:layout_height="wrap_content"
-        android:text="New Text"
+        android:text="Address"
         android:id="@+id/addressTV" android:layout_gravity="right"
-        android:layout_below="@+id/userEmail" android:layout_alignStart="@+id/userEmail"
+        android:layout_below="@+id/usernameTV" android:layout_alignStart="@+id/usernameTV"
         android:layout_alignWithParentIfMissing="false" android:layout_alignParentRight="true"
         android:gravity="right" android:layout_margin="10dp"/>
 

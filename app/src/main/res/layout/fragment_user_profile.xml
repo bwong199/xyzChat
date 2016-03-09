@@ -60,4 +60,10 @@
         android:src="@drawable/unknownuser"
         android:layout_alignTop="@+id/attachment"
         android:layout_toStartOf="@+id/saveProfileButton"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/countryTV"
+        android:hint="Tell us where you are from?" android:layout_below="@+id/attachment"
+        android:layout_alignParentStart="true"/>
 </RelativeLayout>
