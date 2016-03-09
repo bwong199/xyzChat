@@ -29,12 +29,22 @@ public class UserDetailActivity extends SingleFragmentActivity {
             startActivity(intent);
             return true;
         }
-
+        if(id == R.id.userListMenu){
+            Intent intent = new Intent(getApplicationContext(), UserListActivity.class);
+            startActivity(intent);
+            return true;
+        }
         if(id == R.id.signOut){
             ref = new Firebase("https://originchat.firebaseio.com/");
             ref.unauth();
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(intent);
+        }
+
+        if(id == R.id.myMessages){
+            Intent intent = new Intent(getApplicationContext(), MessageActivity.class);
+            startActivity(intent);
+            return true;
         }
 
         return super.onOptionsItemSelected(item);

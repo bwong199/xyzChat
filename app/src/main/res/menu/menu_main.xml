@@ -2,6 +2,12 @@
       xmlns:app="http://schemas.android.com/apk/res-auto"
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="com.benwong.geochat.MainActivity">
+
+
+    <item android:id="@+id/userListMenu"         
+          android:orderInCategory="100"
+          android:title="Discover Origins"
+          app:showAsAction="never"/>
     <item android:id="@+id/userProfile"
           android:orderInCategory="100"
           android:title="User Profile"
@@ -14,5 +20,7 @@
           android:orderInCategory="100"
           android:title="Sign Out"
           app:showAsAction="never"/>
+
+
 
 </menu>

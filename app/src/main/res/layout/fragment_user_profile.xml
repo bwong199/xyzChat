@@ -16,7 +16,7 @@
         android:inputType="textMultiLine"
         android:ems="10"
         android:id="@+id/userDescriptionET"
-        android:hint="Tell us about you"
+        android:hint="Tell us about yourself"
         android:layout_marginTop="78dp"
         android:layout_below="@+id/countryTV" android:layout_alignParentEnd="true"
         android:layout_alignParentStart="true"/>
@@ -39,7 +39,7 @@
         android:layout_height="wrap_content"
         android:text="Save Profile"
         android:id="@+id/saveProfileButton" android:layout_below="@+id/userDescriptionET"
-        android:layout_centerHorizontal="true" android:layout_marginTop="130dp"/>
+        android:layout_centerHorizontal="true" android:layout_marginTop="10dp"/>
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

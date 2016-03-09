@@ -7,12 +7,12 @@ import android.view.MenuItem;
 
 import com.firebase.client.Firebase;
 
-public class UserProfileActivity extends SingleFragmentActivity {
+public class MessageActivity  extends SingleFragmentActivity {
+
     Firebase ref;
-
-
+    @Override
     protected Fragment createFragment() {
-        return new UserProfileFragment();
+        return new MessageFragment();
     }
 
     @Override
@@ -31,33 +31,31 @@ public class UserProfileActivity extends SingleFragmentActivity {
             return true;
         }
 
-        if(id == R.id.userListMenu){
-            Intent intent = new Intent(getApplicationContext(), UserListActivity.class);
-            startActivity(intent);
-            return true;
-        }
-
         if(id == R.id.myMessages){
             Intent intent = new Intent(getApplicationContext(), MessageActivity.class);
             startActivity(intent);
             return true;
         }
 
+
+
+        if(id == R.id.userListMenu){
+            Intent intent = new Intent(getApplicationContext(), UserListActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
+
         if(id == R.id.signOut){
             ref = new Firebase("https://originchat.firebaseio.com/");
             ref.unauth();
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+
             startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);
     }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        System.out.println("Activity onActivityResult " + requestCode + " " +  resultCode  + " " + data);
-
-    }
 }
+
+

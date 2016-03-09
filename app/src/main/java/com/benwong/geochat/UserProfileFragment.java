@@ -101,8 +101,14 @@ public class UserProfileFragment extends Fragment {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 System.out.println(snapshot);
-                usernameET.setText(String.valueOf(snapshot.child("username").getValue()) );
-                userDescriptionET.setText(String.valueOf(snapshot.child("description").getValue()) );
+                if(snapshot.child("username").getValue() != null){
+                    usernameET.setText(String.valueOf(snapshot.child("username").getValue()) );
+                }
+
+                if(snapshot.child("description").getValue() != null){
+                    userDescriptionET.setText(String.valueOf(snapshot.child("description").getValue()) );
+                }
+
             }
             @Override
             public void onCancelled(FirebaseError firebaseError) {

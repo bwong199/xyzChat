@@ -29,6 +29,17 @@ public class UserListActivity extends SingleFragmentActivity {
             startActivity(intent);
             return true;
         }
+        if(id == R.id.myMessages){
+            Intent intent = new Intent(getApplicationContext(), MessageActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
+        if(id == R.id.userListMenu){
+            Intent intent = new Intent(getApplicationContext(), UserListActivity.class);
+            startActivity(intent);
+            return true;
+        }
 
         if(id == R.id.signOut){
             ref = new Firebase("https://originchat.firebaseio.com/");

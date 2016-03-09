@@ -19,7 +19,7 @@ import java.util.Map;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class RegisterFragment extends Fragment implements View.OnClickListener{
+public class RegisterFragment extends Fragment implements View.OnClickListener {
 
     private EditText usernameRegister;
     private EditText emailRegister;
@@ -39,11 +39,11 @@ public class RegisterFragment extends Fragment implements View.OnClickListener{
         View view = inflater.inflate(R.layout.fragment_register, container, false);
 
 
-        emailRegister = (EditText)view.findViewById(R.id.emailLogin);
-        passwordRegister = (EditText)view.findViewById(R.id.passwordLogin);
+        emailRegister = (EditText) view.findViewById(R.id.emailLogin);
+        passwordRegister = (EditText) view.findViewById(R.id.passwordLogin);
 
 
-        registerButton = (Button)view.findViewById(R.id.registerButton);
+        registerButton = (Button) view.findViewById(R.id.registerButton);
         registerButton.setOnClickListener(this);
 
         return view;
@@ -58,18 +58,17 @@ public class RegisterFragment extends Fragment implements View.OnClickListener{
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.registerButton:
-            createUser();
-
+                createUser();
 
         }
     }
 
-    private void createUser(){
+    private void createUser() {
 
 
-        ref.createUser(emailRegister.getText().toString(),passwordRegister.getText().toString(), new Firebase.ValueResultHandler<Map<String, Object>>()  {
+        ref.createUser(emailRegister.getText().toString(), passwordRegister.getText().toString(), new Firebase.ValueResultHandler<Map<String, Object>>() {
 
 
             @Override
@@ -94,9 +93,8 @@ public class RegisterFragment extends Fragment implements View.OnClickListener{
                         Constant.USERID = authData.getUid();
                         Constant.USEREMAIL = emailRegister.getText().toString();
                         Constant.USERPASSWORD = passwordRegister.getText().toString();
+
                         Intent intent = new Intent(getActivity(), UserListActivity.class);
-                        intent.putExtra("loginEmail", emailRegister.getText().toString());
-                        intent.putExtra("userId", authData.getUid());
                         startActivity(intent);
                     }
 
