@@ -28,9 +28,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Description"
+        android:layout_marginLeft="10dp"
         android:id="@+id/descriptionTV"
         android:layout_toEndOf="@id/usernameTV"
         android:layout_alignTop="@+id/imageView2" android:layout_toRightOf="@+id/imageView2"/>
+    <android.support.v7.widget.RecyclerView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/fragment_message_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/messageET" android:layout_below="@+id/descriptionTV"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -43,10 +50,4 @@
         android:id="@+id/messageET" android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true" android:layout_toStartOf="@+id/button"
         android:hint="Send a Message"/>
-    <ListView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/listView"
-        android:layout_centerHorizontal="true" android:layout_above="@+id/messageET"
-        android:layout_below="@+id/imageView2"/>
 </RelativeLayout>

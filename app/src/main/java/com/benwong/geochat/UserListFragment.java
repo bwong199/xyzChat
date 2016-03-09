@@ -290,11 +290,6 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 
                         }
 
-//                        if (nearByUsersList != null) {
-//                            arrayAdapter = new ArrayAdapter<User>(getActivity(), android.R.layout.simple_list_item_1, nearByUsersList);
-//                            myListView.setAdapter(arrayAdapter);
-//                        }
-
 
                     }
 

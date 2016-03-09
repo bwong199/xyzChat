@@ -5,6 +5,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -43,6 +45,8 @@ public class UserDetailFragment extends Fragment {
     private List<Message> mMessageList;
     private ListView mListview;
     ArrayAdapter<Message> arrayAdapter;
+    private RecyclerView mMessageRecyclerView;
+
 
     public UserDetailFragment() {
     }
@@ -60,9 +64,12 @@ public class UserDetailFragment extends Fragment {
         messageBtn = (Button) view.findViewById(R.id.button);
         final ArrayAdapter<Message> arrayAdapter;
         mMessageList = new ArrayList<Message>();
-        mListview = (ListView) view.findViewById(R.id.listView);
+//        mListview = (ListView) view.findViewById(R.id.listView);
 
-        arrayAdapter = new ArrayAdapter<Message>(getActivity(), android.R.layout.simple_list_item_1, mMessageList);
+//        arrayAdapter = new ArrayAdapter<Message>(getActivity(), android.R.layout.simple_list_item_1, mMessageList);
+
+        mMessageRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_message_recycler_view);
+        mMessageRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         intent = getActivity().getIntent();
 
@@ -103,7 +110,7 @@ public class UserDetailFragment extends Fragment {
         messageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                messageET.setText("");
+
                 ref = new Firebase("https://originchat.firebaseio.com/messages");
 
                 Message newMessage = new Message();
@@ -111,7 +118,10 @@ public class UserDetailFragment extends Fragment {
                 newMessage.setRecipientId(intent.getStringExtra("userId"));
                 newMessage.setMessage(messageET.getText().toString());
                 newMessage.setDate(new Date());
+
                 ref.push().setValue(newMessage);
+
+                messageET.setText("");
 
 
             }
@@ -123,6 +133,7 @@ public class UserDetailFragment extends Fragment {
         queryRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                mMessageList.clear();
                 System.out.println(dataSnapshot);
 
                 System.out.println("There are " + dataSnapshot.getChildrenCount() + " messages");
@@ -154,7 +165,7 @@ public class UserDetailFragment extends Fragment {
                         for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
                             Message facts = postSnapshot.getValue(Message.class);
 
-                            if (facts.getSenderId().toString().equals(intent.getStringExtra("userId")) ) {
+                            if (facts.getSenderId().toString().equals(intent.getStringExtra("userId"))) {
                                 System.out.println(facts.getRecipientId() + " - " + facts.getMessage());
                                 Message message = new Message();
                                 message.setDate(facts.getDate());
@@ -162,13 +173,79 @@ public class UserDetailFragment extends Fragment {
                                 message.setRecipientId(facts.getRecipientId());
                                 message.setSenderId(facts.getSenderId());
                                 mMessageList.add(message);
+                                System.out.println(mMessageList);
                             }
-
                         }
 
-                        System.out.println("final message list" + mMessageList);
+                        //Create holder to put in adapter
+                        class MessageHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-                        mListview.setAdapter(arrayAdapter);
+                            private Message mMessage;
+                            TextView mSenderTV;
+                            TextView mMessageTV;
+
+
+                            public MessageHolder(View itemView) {
+                                super(itemView);
+
+                                itemView.setOnClickListener(this);
+                                mSenderTV = (TextView) itemView.findViewById(R.id.senderTV);
+
+                                mMessageTV = (TextView) itemView.findViewById(R.id.messageTV);
+
+                            }
+
+                            public void bindMessageItem(Message message) {
+                                mMessage = message;
+
+                                mMessageTV.setText(message.getSenderId());
+                                mMessageTV.setText(message.getMessage());
+
+                            }
+
+                            @Override
+                            public void onClick(View v) {
+
+                            }
+                        }
+
+                        class MessageAdapter extends RecyclerView.Adapter<MessageHolder> {
+
+                            private List<Message> mMessageItems;
+
+                            public MessageAdapter(List<Message> messageItems) {
+                                mMessageItems = messageItems;
+                            }
+
+                            @Override
+                            public MessageHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+//                                TextView textView = new TextView(getActivity());
+                                LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
+                                View view = layoutInflater.inflate(R.layout.list_item_message, viewGroup, false);
+                                return new MessageHolder(view);
+                            }
+
+                            @Override
+                            public void onBindViewHolder(MessageHolder messageHolder, int position) {
+                                Message messageItem = mMessageItems.get(position);
+                                messageHolder.bindMessageItem(messageItem);
+                            }
+
+                            @Override
+                            public int getItemCount() {
+                                return mMessageItems.size();
+                            }
+                        }
+
+                        for(Message x : mMessageList){
+                            System.out.println(x.getSenderId() + " sent " + x.getMessage() + " to " + x.getRecipientId());
+                        }
+
+                        System.out.println("before setting up adapter");
+                        if (isAdded()) {
+                            mMessageRecyclerView.setAdapter(new MessageAdapter(mMessageList));
+                        }
+
 
                     }
 
@@ -176,6 +253,10 @@ public class UserDetailFragment extends Fragment {
                     public void onCancelled(FirebaseError firebaseError) {
 
                     }
+                    //need to delete when done
+//                           mListview.setAdapter(arrayAdapter);
+
+
                 });
 
             }
@@ -184,11 +265,10 @@ public class UserDetailFragment extends Fragment {
             public void onCancelled(FirebaseError firebaseError) {
 
             }
+
+
         });
-
         return view;
-
     }
-
 
 }
