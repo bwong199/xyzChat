@@ -187,7 +187,6 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                 usersFromHome.setUserLatitude(String.valueOf(nearbyLocation.latitude));
                                 usersFromHome.setUserLongitude(String.valueOf(nearbyLocation.longitude));
 
-
                                 //calculates distance to from the current user to the list of other nearby users
 
                                 if (location != null) {
@@ -245,8 +244,10 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                             mProfilePic.setImageBitmap(icon);
                                         }
 
+                                       String formattedDistance =  String.format("%.1f", user.getDistanceToUser());
 
-                                        mDistanceAway.setText(Float.toString(user.getDistanceToUser()) + " km away");
+
+                                        mDistanceAway.setText(formattedDistance + " km away");
                                     }
 
                                     @Override

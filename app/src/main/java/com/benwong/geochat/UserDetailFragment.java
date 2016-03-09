@@ -26,6 +26,7 @@ import com.firebase.client.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -94,7 +95,7 @@ public class UserDetailFragment extends Fragment {
                     profilePic.setImageBitmap(icon);
                 }
 
-                if (dataSnapshot.child("description").getValue() == null) {
+                if (dataSnapshot.child("description").getValue() == null || dataSnapshot.child("description").getValue().equals("null") ) {
                     descriptionTV.setText("I haven't written anything about myself yet.");
                 } else {
                     descriptionTV.setText(String.valueOf(dataSnapshot.child("description").getValue()));
@@ -245,13 +246,14 @@ public class UserDetailFragment extends Fragment {
                             }
                         }
 
-                        for(Message x : mMessageList){
-                            System.out.println(x.getSenderId() + " sent " + x.getMessage() + " to " + x.getRecipientId());
-                        }
-
-                        System.out.println("before setting up adapter");
+//                        for(Message x : mMessageList){
+//                            System.out.println(x.getSenderId() + " sent " + x.getMessage() + " to " + x.getRecipientId());
+//                        }
+//
+//                        System.out.println("before setting up adapter");
                         if (isAdded()) {
 
+                            Collections.sort(mMessageList);
                             mMessageRecyclerView.setAdapter(new MessageAdapter(mMessageList));
                         }
                     }
