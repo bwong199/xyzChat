@@ -132,15 +132,17 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 try {
-
-                    country.setText(String.valueOf(dataSnapshot.child("country").getValue()));
-                    usernameTV.setText(String.valueOf(dataSnapshot.child("username").getValue()));
-                    queryForUsers(String.valueOf(dataSnapshot.child("country").getValue()));
-
+                    System.out.println("query for user country" + dataSnapshot);
                     if (dataSnapshot.child("country").getValue() == null || dataSnapshot.child("username").getValue() == null ) {
                         Intent intent = new Intent(getActivity(), UserProfileActivity.class);
                         startActivity(intent);
+                    }else {
+                        country.setText(String.valueOf(dataSnapshot.child("country").getValue()));
+                        usernameTV.setText(String.valueOf(dataSnapshot.child("username").getValue()));
+                        queryForUsers(String.valueOf(dataSnapshot.child("country").getValue()));
                     }
+
+
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -172,123 +174,129 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
 
-//                        System.out.println(dataSnapshot.child("country").getValue());
+                        System.out.println(dataSnapshot.child("country").getValue());
 
-                        if (dataSnapshot.child("country").getValue().toString().equals(userCountry) && !(dataSnapshot.getKey().toString().equals(Constant.USERID))) {
-                            User usersFromHome = new User();
-                            usersFromHome.setCountry(String.valueOf(dataSnapshot.child("country").getValue()));
-                            usersFromHome.setEmail(String.valueOf(dataSnapshot.child("email").getValue()));
-                            usersFromHome.setUserId(dataSnapshot.getKey());
-                            usersFromHome.setImage(String.valueOf(dataSnapshot.child("profilePic").getValue()));
-                            usersFromHome.setUsername(String.valueOf(dataSnapshot.child("username").getValue()));
-                            usersFromHome.setUserLatitude(String.valueOf(nearbyLocation.latitude));
-                            usersFromHome.setUserLongitude(String.valueOf(nearbyLocation.longitude));
-
-
-                            //calculates distance to from the current user to the list of other nearby users
-
-                            if (location != null) {
-
-                                Location loc = new Location("");
-                                loc.setLatitude(nearbyLocation.latitude);
-                                loc.setLongitude(nearbyLocation.longitude);
-
-                                distanceToUser = userLocation.distanceTo(loc) / 1000;
-                                usersFromHome.setDistanceToUser(distanceToUser);
-
-                            } else {
-                                distanceToUser = (float) 0.0;
-                            }
+                        try{
+                            if (dataSnapshot.child("country").getValue().toString().equals(userCountry) && !(dataSnapshot.getKey().toString().equals(Constant.USERID))) {
+                                User usersFromHome = new User();
+                                usersFromHome.setCountry(String.valueOf(dataSnapshot.child("country").getValue()));
+                                usersFromHome.setEmail(String.valueOf(dataSnapshot.child("email").getValue()));
+                                usersFromHome.setUserId(dataSnapshot.getKey());
+                                usersFromHome.setImage(String.valueOf(dataSnapshot.child("profilePic").getValue()));
+                                usersFromHome.setUsername(String.valueOf(dataSnapshot.child("username").getValue()));
+                                usersFromHome.setUserLatitude(String.valueOf(nearbyLocation.latitude));
+                                usersFromHome.setUserLongitude(String.valueOf(nearbyLocation.longitude));
 
 
-                            System.out.println("nearByUsers " + usersFromHome.getEmail() + " is from " + usersFromHome.getCountry() + " is " + distanceToUser + " km away");
-                            nearByUsersList.add(usersFromHome);
+                                //calculates distance to from the current user to the list of other nearby users
 
-                            //putting items into an individual holder which gets fed into an adapter
-                            class UserHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+                                if (location != null) {
 
-                                private User mUser;
-                                TextView mCountryTV;
-                                TextView mDistanceAway;
-                                ImageView mProfilePic;
-                                TextView mUsername;
+                                    Location loc = new Location("");
+                                    loc.setLatitude(nearbyLocation.latitude);
+                                    loc.setLongitude(nearbyLocation.longitude);
 
-                                public UserHolder(View itemView) {
-                                    super(itemView);
+                                    distanceToUser = userLocation.distanceTo(loc) / 1000;
+                                    usersFromHome.setDistanceToUser(distanceToUser);
 
-                                    itemView.setOnClickListener(this);
-                                    mCountryTV = (TextView) itemView.findViewById(R.id.usernameTV);
-
-                                    mDistanceAway = (TextView) itemView.findViewById(R.id.distanceAwayTV);
-                                    mProfilePic = (ImageView) itemView.findViewById(R.id.imageView);
-                                    mUsername = (TextView) itemView.findViewById(R.id.usernameTV);
+                                } else {
+                                    distanceToUser = (float) 0.0;
                                 }
 
-                                public void bindUserItem(User user) {
-                                    mUser = user;
+
+                                System.out.println("nearByUsers " + usersFromHome.getEmail() + " is from " + usersFromHome.getCountry() + " is " + distanceToUser + " km away");
+                                nearByUsersList.add(usersFromHome);
+
+                                //putting items into an individual holder which gets fed into an adapter
+                                class UserHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+                                    private User mUser;
+                                    TextView mCountryTV;
+                                    TextView mDistanceAway;
+                                    ImageView mProfilePic;
+                                    TextView mUsername;
+
+                                    public UserHolder(View itemView) {
+                                        super(itemView);
+
+                                        itemView.setOnClickListener(this);
+                                        mCountryTV = (TextView) itemView.findViewById(R.id.usernameTV);
+
+                                        mDistanceAway = (TextView) itemView.findViewById(R.id.distanceAwayTV);
+                                        mProfilePic = (ImageView) itemView.findViewById(R.id.imageView);
+                                        mUsername = (TextView) itemView.findViewById(R.id.usernameTV);
+                                    }
+
+                                    public void bindUserItem(User user) {
+                                        mUser = user;
 //                                    mEmailTV.setText(user.getEmail());
 //                                    mCountryTV.setText(user.getCountry());
 //                                    mId.setText(user.getUserId());
 //                                    mLatitude.setText(user.getUserLatitude());
 //                                    mLongitude.setText(user.getUserLongitude());
-                                    byte[] imageAsBytes = Base64.decode(user.getImage(), Base64.DEFAULT);
-                                    Bitmap bmp = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
-                                    mUsername.setText(user.getUsername());
-                                    if (bmp != null) {
-                                        mProfilePic.setImageBitmap(bmp);
-                                    } else {
-                                        Bitmap icon = BitmapFactory.decodeResource(getActivity().getResources(),
-                                                R.drawable.unknownuser);
-                                        mProfilePic.setImageBitmap(icon);
+                                        byte[] imageAsBytes = Base64.decode(user.getImage(), Base64.DEFAULT);
+                                        Bitmap bmp = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
+                                        mUsername.setText(user.getUsername());
+                                        if (bmp != null) {
+                                            mProfilePic.setImageBitmap(bmp);
+                                        } else {
+                                            Bitmap icon = BitmapFactory.decodeResource(getActivity().getResources(),
+                                                    R.drawable.unknownuser);
+                                            mProfilePic.setImageBitmap(icon);
+                                        }
+
+
+                                        mDistanceAway.setText(Float.toString(user.getDistanceToUser()) + " km away");
                                     }
 
-
-                                    mDistanceAway.setText(Float.toString(user.getDistanceToUser()) + " km away");
+                                    @Override
+                                    public void onClick(View v) {
+                                        Intent intent = new Intent(getActivity(), UserDetailActivity.class);
+                                        intent.putExtra("userId", mUser.getId());
+                                        startActivity(intent);
+                                    }
                                 }
 
-                                @Override
-                                public void onClick(View v) {
-                                    Intent intent = new Intent(getActivity(), UserDetailActivity.class);
-                                    intent.putExtra("userId", mUser.getId());
-                                    startActivity(intent);
-                                }
-                            }
+                                class UserAdapter extends RecyclerView.Adapter<UserHolder> {
 
-                            class UserAdapter extends RecyclerView.Adapter<UserHolder> {
+                                    private List<User> mUserItems;
 
-                                private List<User> mUserItems;
+                                    public UserAdapter(List<User> userItems) {
+                                        mUserItems = userItems;
+                                    }
 
-                                public UserAdapter(List<User> userItems) {
-                                    mUserItems = userItems;
-                                }
-
-                                @Override
-                                public UserHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+                                    @Override
+                                    public UserHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
 //                                TextView textView = new TextView(getActivity());
-                                    LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
-                                    View view = layoutInflater.inflate(R.layout.list_item_user, viewGroup, false);
-                                    return new UserHolder(view);
+                                        LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
+                                        View view = layoutInflater.inflate(R.layout.list_item_user, viewGroup, false);
+                                        return new UserHolder(view);
+                                    }
+
+                                    @Override
+                                    public void onBindViewHolder(UserHolder userHolder, int position) {
+                                        User userItem = mUserItems.get(position);
+                                        userHolder.bindUserItem(userItem);
+                                    }
+
+                                    @Override
+                                    public int getItemCount() {
+                                        return mUserItems.size();
+                                    }
                                 }
 
-                                @Override
-                                public void onBindViewHolder(UserHolder userHolder, int position) {
-                                    User userItem = mUserItems.get(position);
-                                    userHolder.bindUserItem(userItem);
+
+                                if (isAdded()) {
+                                    mPhotoRecyclerView.setAdapter(new UserAdapter(nearByUsersList));
                                 }
 
-                                @Override
-                                public int getItemCount() {
-                                    return mUserItems.size();
-                                }
+
                             }
-
-
-                            if (isAdded()) {
-                                mPhotoRecyclerView.setAdapter(new UserAdapter(nearByUsersList));
-                            }
-
-
+                        }catch (Exception e){
+                            e.printStackTrace();
                         }
+
+
 
 
                     }

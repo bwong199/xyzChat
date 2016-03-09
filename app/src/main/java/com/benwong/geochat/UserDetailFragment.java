@@ -24,6 +24,7 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -70,6 +71,7 @@ public class UserDetailFragment extends Fragment {
 
         mMessageRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_message_recycler_view);
         mMessageRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+//        mMessageRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
 
         intent = getActivity().getIntent();
 
@@ -82,7 +84,6 @@ public class UserDetailFragment extends Fragment {
                 byte[] imageAsBytes = Base64.decode(String.valueOf(dataSnapshot.child("profilePic").getValue()), Base64.DEFAULT);
                 Bitmap bmp = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
 
-
                 usernameTV.setText(String.valueOf(dataSnapshot.child("username").getValue()));
 
                 if (bmp != null) {
@@ -93,12 +94,11 @@ public class UserDetailFragment extends Fragment {
                     profilePic.setImageBitmap(icon);
                 }
 
-                if (dataSnapshot.child("description").getValue().equals("null")) {
+                if (dataSnapshot.child("description").getValue() == null) {
                     descriptionTV.setText("I haven't written anything about myself yet.");
                 } else {
                     descriptionTV.setText(String.valueOf(dataSnapshot.child("description").getValue()));
                 }
-
             }
 
             @Override
@@ -110,20 +110,14 @@ public class UserDetailFragment extends Fragment {
         messageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 ref = new Firebase("https://originchat.firebaseio.com/messages");
-
                 Message newMessage = new Message();
                 newMessage.setSenderId(Constant.USERID);
                 newMessage.setRecipientId(intent.getStringExtra("userId"));
                 newMessage.setMessage(messageET.getText().toString());
                 newMessage.setDate(new Date());
-
                 ref.push().setValue(newMessage);
-
                 messageET.setText("");
-
-
             }
         });
 
@@ -152,9 +146,7 @@ public class UserDetailFragment extends Fragment {
 
                 }
 
-
                 System.out.println(dataSnapshot.getKey() + " " + dataSnapshot.child("senderId").getValue() + " " + dataSnapshot.child("recipientId").getValue());
-
 
                 nestedMessageListener = new Firebase("https://originchat.firebaseio.com/messages");
                 Query nestedQueryRef = nestedMessageListener.orderByChild("recipientId").equalTo(Constant.USERID);
@@ -183,24 +175,40 @@ public class UserDetailFragment extends Fragment {
                             private Message mMessage;
                             TextView mSenderTV;
                             TextView mMessageTV;
-
+                            TextView mDateTV;
 
                             public MessageHolder(View itemView) {
                                 super(itemView);
-
                                 itemView.setOnClickListener(this);
                                 mSenderTV = (TextView) itemView.findViewById(R.id.senderTV);
-
                                 mMessageTV = (TextView) itemView.findViewById(R.id.messageTV);
-
+                                mDateTV = (TextView)itemView.findViewById(R.id.dateTV);
                             }
 
                             public void bindMessageItem(Message message) {
                                 mMessage = message;
 
-                                mMessageTV.setText(message.getSenderId());
+
+                                //query for Sender's name based on ID
+                                Firebase ref = new Firebase("https://originchat.firebaseio.com/users/" + message.getSenderId());
+                                ref.addValueEventListener(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        System.out.println("chat sender name" +dataSnapshot.child("username").getValue() );
+                                        mSenderTV.setText(String.valueOf(dataSnapshot.child("username").getValue()));
+                                    }
+
+                                    @Override
+                                    public void onCancelled(FirebaseError firebaseError) {
+
+                                    }
+                                });
+
                                 mMessageTV.setText(message.getMessage());
 
+                                SimpleDateFormat dt1 = new SimpleDateFormat("dd-MMM, h:m a");
+
+                                mDateTV.setText(dt1.format(message.getDate()));
                             }
 
                             @Override
@@ -243,10 +251,9 @@ public class UserDetailFragment extends Fragment {
 
                         System.out.println("before setting up adapter");
                         if (isAdded()) {
+
                             mMessageRecyclerView.setAdapter(new MessageAdapter(mMessageList));
                         }
-
-
                     }
 
                     @Override
@@ -255,18 +262,13 @@ public class UserDetailFragment extends Fragment {
                     }
                     //need to delete when done
 //                           mListview.setAdapter(arrayAdapter);
-
-
                 });
-
             }
 
             @Override
             public void onCancelled(FirebaseError firebaseError) {
 
             }
-
-
         });
         return view;
     }

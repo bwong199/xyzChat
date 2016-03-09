@@ -112,6 +112,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
                         break;
                       default:
                         // handle other errors
+                          Toast.makeText(getContext(), firebaseError.getMessage().toString(), Toast.LENGTH_LONG).show();
                         break;
                 }
             }
