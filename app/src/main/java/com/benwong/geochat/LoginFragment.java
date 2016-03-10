@@ -90,8 +90,11 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
                 Constant.USEREMAIL = emailLogin.getText().toString();
                 Constant.USERPASSWORD = passwordLogin.getText().toString();
 
+                //set user's email in the user tree upon registration
+                ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID);
+                ref.child("email").setValue(emailLogin.getText().toString());
+
                 Intent intent = new Intent(getActivity(), UserListActivity.class);
-                intent.putExtra("loginEmail", emailLogin.getText().toString());
                 intent.putExtra("userId", authData.getUid());
                 startActivity(intent);
             }

@@ -4,7 +4,7 @@
       tools:context="com.benwong.geochat.MainActivity">
 
 
-    <item android:id="@+id/userListMenu"         
+    <item android:id="@+id/userListMenu"
           android:orderInCategory="100"
           android:title="Discover Origins"
           app:showAsAction="never"/>

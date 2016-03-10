@@ -25,6 +25,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,6 +50,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
     private TextView usernameTV;
     private TextView country;
     private Firebase ref;
+    private Firebase queryPreviousLocation;
     private Intent intent;
     private LocationManager locationManager;
     private String provider;
@@ -62,6 +64,9 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
     private Location userLocation;
     float distanceToUser;
     private ImageView profileImageView;
+    private SeekBar distanceControl;
+    private GeoQuery geoQuery;
+    private int distanceProgress;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -73,13 +78,29 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
         usernameTV = (TextView) view.findViewById(R.id.usernameTV);
 
         //force user to set country and username if it's not set in the database
+        distanceControl = (SeekBar)view.findViewById(R.id.seekBar);
 
+        distanceControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                System.out.println("seekbar progress "+ progress);
+                distanceProgress = progress;
+//                queryForUsers(Constant.USERCOUNTRY);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
 
         intent = getActivity().getIntent();
 
-//        userEmail.setText(Constant.USEREMAIL);
-        ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID);
-        ref.child("email").setValue(intent.getStringExtra("loginEmail"));
 
         country = (TextView) view.findViewById(R.id.country);
         addressTV = (TextView) view.findViewById(R.id.addressTV);
@@ -112,38 +133,55 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 
         location = locationManager.getLastKnownLocation(provider);
 
+        // check to see if location is turned on
         boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-
         if (enabled && location != null) {
             try {
                 onLocationChanged(location);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         } else {
-            Toast.makeText(getActivity(), "Please turn on GPS", Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), "Please turn on GPS for the most accurate location", Toast.LENGTH_LONG).show();
+            // query for signed-in user's last location if currrent location doesn't exist so app can still find nearby users if GPS is turned off
+            queryPreviousLocation = new Firebase("https://originchat.firebaseio.com/locations/" + Constant.USERID);
+            queryPreviousLocation.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+//                    System.out.println("user location " + dataSnapshot);
+//                    System.out.println("user location " + dataSnapshot.child("l").child("0").getValue());
+//                    System.out.println("user location " + dataSnapshot.child("l").child("1").getValue());
+                    userLocation = new Location("");
+                    userLocation.setLatitude((Double) dataSnapshot.child("l").child("0").getValue());
+                    userLocation.setLongitude((Double) dataSnapshot.child("l").child("1").getValue());
+                    setAddress(userLocation);
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+
         }
 
-        ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID );
+        ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID);
         //query for user's home country
 
         ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 try {
-                    System.out.println("query for user country" + dataSnapshot);
-                    if (dataSnapshot.child("country").getValue() == null || dataSnapshot.child("username").getValue() == null ) {
+//                    System.out.println("query for user country" + dataSnapshot);
+                    if (dataSnapshot.child("country").getValue() == null || dataSnapshot.child("username").getValue() == null) {
                         Intent intent = new Intent(getActivity(), UserProfileActivity.class);
                         startActivity(intent);
-                    }else {
+                    } else {
                         country.setText(String.valueOf(dataSnapshot.child("country").getValue()));
                         usernameTV.setText(String.valueOf(dataSnapshot.child("username").getValue()));
+                        Constant.USERCOUNTRY = String.valueOf(dataSnapshot.child("country").getValue());
                         queryForUsers(String.valueOf(dataSnapshot.child("country").getValue()));
                     }
-
-
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -158,15 +196,27 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
     }
 
     private void queryForUsers(final String userCountry) {
+
+        nearByUsersList.clear();
+
         //query geolocation to find nearbyUsers
         geoFire = new GeoFire(new Firebase("https://originchat.firebaseio.com/locations/"));
 
-        GeoLocation center = new GeoLocation(location.getLatitude(), location.getLongitude());
+        GeoLocation center;
+        if (location != null) {
+            // use user's GPS to determine location if GPS it turned on
+            center = new GeoLocation(location.getLatitude(), location.getLongitude());
+        } else {
+            // use user's previous location to determine location if GPS is turned off
+            center = new GeoLocation(userLocation.getLatitude(), userLocation.getLongitude());
+        }
 
-        GeoQuery geoQuery = geoFire.queryAtLocation(center, 5);
+        //query geolocation to find nearbyUsers
+        geoQuery = geoFire.queryAtLocation(center, 5);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String username, final GeoLocation nearbyLocation) {
+//                System.out.println(username + nearbyLocation);
                 //query by country within the list of nearby users
                 ref = new Firebase("https://originchat.firebaseio.com/users/" + username);
 
@@ -174,11 +224,10 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
 
-                        System.out.println(dataSnapshot.child("country").getValue());
-
-                        try{
+//                        System.out.println(dataSnapshot.child("country").getValue());
+                        try {
                             if (dataSnapshot.child("country").getValue().toString().equals(userCountry) && !(dataSnapshot.getKey().toString().equals(Constant.USERID))) {
-                                User usersFromHome = new User();
+                                final User usersFromHome = new User();
                                 usersFromHome.setCountry(String.valueOf(dataSnapshot.child("country").getValue()));
                                 usersFromHome.setEmail(String.valueOf(dataSnapshot.child("email").getValue()));
                                 usersFromHome.setUserId(dataSnapshot.getKey());
@@ -188,22 +237,45 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                 usersFromHome.setUserLongitude(String.valueOf(nearbyLocation.longitude));
 
                                 //calculates distance to from the current user to the list of other nearby users
-
                                 if (location != null) {
-
+//                                    System.out.println("location if gps is off" + userLocation.getLatitude() + " " + userLocation.getLongitude());
                                     Location loc = new Location("");
                                     loc.setLatitude(nearbyLocation.latitude);
                                     loc.setLongitude(nearbyLocation.longitude);
-
                                     distanceToUser = userLocation.distanceTo(loc) / 1000;
                                     usersFromHome.setDistanceToUser(distanceToUser);
 
-                                } else {
-                                    distanceToUser = (float) 0.0;
+                                }   else {
+                                    // if location is not available, query for user's previous location
+                                    queryPreviousLocation = new Firebase("https://originchat.firebaseio.com/locations/" + Constant.USERID);
+                                    queryPreviousLocation.addValueEventListener(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(DataSnapshot dataSnapshot) {
+
+                                            userLocation.setLatitude((Double) dataSnapshot.child("l").child("0").getValue());
+                                            userLocation.setLongitude((Double) dataSnapshot.child("l").child("1").getValue());
+
+                                            Location loc = new Location("");
+                                            loc.setLatitude(nearbyLocation.latitude);
+                                            loc.setLongitude(nearbyLocation.longitude);
+                                            distanceToUser = userLocation.distanceTo(loc) / 1000;
+                                            usersFromHome.setDistanceToUser(distanceToUser);
+
+//                                            System.out.println("Distance to user " + usersFromHome.getId() + "  " +
+//                                                    usersFromHome.getUserLatitude() + " " + usersFromHome.getUserLongitude() + " "
+//                                                    + userLocation.getLatitude() + " " + userLocation.getLongitude() + " " +  usersFromHome.getDistanceToUser());
+//
+                                        }
+
+                                        @Override
+                                        public void onCancelled(FirebaseError firebaseError) {
+
+                                        }
+                                    });
+
                                 }
 
-
-                                System.out.println("nearByUsers " + usersFromHome.getEmail() + " is from " + usersFromHome.getCountry() + " is " + distanceToUser + " km away");
+//                                System.out.println("nearByUsers " + usersFromHome.getEmail() + " is from " + usersFromHome.getCountry() + " is " + distanceToUser + " km away");
                                 nearByUsersList.add(usersFromHome);
 
                                 //putting items into an individual holder which gets fed into an adapter
@@ -228,11 +300,6 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 
                                     public void bindUserItem(User user) {
                                         mUser = user;
-//                                    mEmailTV.setText(user.getEmail());
-//                                    mCountryTV.setText(user.getCountry());
-//                                    mId.setText(user.getUserId());
-//                                    mLatitude.setText(user.getUserLatitude());
-//                                    mLongitude.setText(user.getUserLongitude());
                                         byte[] imageAsBytes = Base64.decode(user.getImage(), Base64.DEFAULT);
                                         Bitmap bmp = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
                                         mUsername.setText(user.getUsername());
@@ -244,8 +311,9 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                             mProfilePic.setImageBitmap(icon);
                                         }
 
-                                       String formattedDistance =  String.format("%.1f", user.getDistanceToUser());
+//                                        System.out.println("Distance to user in bindUserItem " + user.getId() + "  " + user.getUserLatitude() + " "  +user.getUserLongitude() + " " + user.getDistanceToUser());
 
+                                        String formattedDistance = String.format("%.2f", user.getDistanceToUser());
 
                                         mDistanceAway.setText(formattedDistance + " km away");
                                     }
@@ -286,20 +354,13 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                     }
                                 }
 
-
                                 if (isAdded()) {
                                     mPhotoRecyclerView.setAdapter(new UserAdapter(nearByUsersList));
                                 }
-
-
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
-
-
-
-
                     }
 
                     @Override
@@ -335,13 +396,10 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
         });
     }
 
-
     @Override
     public void onClick(View v) {
 
-
     }
-
 
     @Override
     public void onLocationChanged(Location location) {
@@ -363,26 +421,27 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 
             }
 
-            Geocoder geocoder = new Geocoder(getActivity(), Locale.getDefault());
-            List<Address> listAddresses = null;
-            try {
-                listAddresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            setAddress(location);
 
-            if (listAddresses != null && listAddresses.size() > 0) {
+        }
+    }
+
+    private void setAddress(Location geoLocation) {
+        Geocoder geocoder = new Geocoder(getActivity(), Locale.getDefault());
+        List<Address> listAddresses = null;
+        try {
+            listAddresses = geocoder.getFromLocation(geoLocation.getLatitude(), geoLocation.getLongitude(), 1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (listAddresses != null && listAddresses.size() > 0) {
 //            Log.i("PlaceInfo", listAddresses.get(0).toString());
-
-                String addressHolder = "";
-
-                for (int i = 0; i <= listAddresses.get(0).getMaxAddressLineIndex(); i++) {
-
-                    addressHolder += listAddresses.get(0).getAddressLine(i) + "\n";
-                    Log.i("address", addressHolder);
-                }
-                addressTV.setText(addressHolder + "\n");
+            String addressHolder = "";
+            for (int i = 0; i <= listAddresses.get(0).getMaxAddressLineIndex(); i++) {
+                addressHolder += listAddresses.get(0).getAddressLine(i) + "\n";
+                Log.i("address", addressHolder);
             }
+            addressTV.setText(addressHolder + "\n");
         }
     }
 

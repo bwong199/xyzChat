@@ -94,6 +94,10 @@ public class RegisterFragment extends Fragment implements View.OnClickListener {
                         Constant.USEREMAIL = emailRegister.getText().toString();
                         Constant.USERPASSWORD = passwordRegister.getText().toString();
 
+                        //set user's email in the user tree upon registration
+                        ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID);
+                        ref.child("email").setValue(emailRegister.getText().toString());
+
                         Intent intent = new Intent(getActivity(), UserListActivity.class);
                         startActivity(intent);
                     }
