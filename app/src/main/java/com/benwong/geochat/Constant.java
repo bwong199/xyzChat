@@ -9,4 +9,5 @@ public class Constant {
     public static String USERPASSWORD;
     public static String USERCOUNTRY;
     public static final int REQUEST_PICK_IMAGE = 1;
+    public static int DISTANCE_SORT;
 }

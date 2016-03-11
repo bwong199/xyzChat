@@ -3,6 +3,7 @@ package com.benwong.geochat;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -25,7 +26,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +40,7 @@ import com.firebase.geofire.GeoQueryEventListener;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -64,9 +65,13 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
     private Location userLocation;
     float distanceToUser;
     private ImageView profileImageView;
-    private SeekBar distanceControl;
+
     private GeoQuery geoQuery;
     private int distanceProgress;
+
+    int value = 0;
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -77,30 +82,16 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 
         usernameTV = (TextView) view.findViewById(R.id.usernameTV);
 
-        //force user to set country and username if it's not set in the database
-        distanceControl = (SeekBar)view.findViewById(R.id.seekBar);
 
-        distanceControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                System.out.println("seekbar progress "+ progress);
-                distanceProgress = progress;
-//                queryForUsers(Constant.USERCOUNTRY);
-            }
+        // get value from the distance sort
+        SharedPreferences prefs = getContext().getSharedPreferences("locationSortPreference", Context.MODE_PRIVATE);
+        value = prefs.getInt("seekBarValue", 0); // 0 is default
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
 
-            }
+        geoFire = new GeoFire(new Firebase("https://originchat.firebaseio.com/locations/"));
 
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
 
         intent = getActivity().getIntent();
-
 
         country = (TextView) view.findViewById(R.id.country);
         addressTV = (TextView) view.findViewById(R.id.addressTV);
@@ -196,12 +187,8 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
     }
 
     private void queryForUsers(final String userCountry) {
-
         nearByUsersList.clear();
-
         //query geolocation to find nearbyUsers
-        geoFire = new GeoFire(new Firebase("https://originchat.firebaseio.com/locations/"));
-
         GeoLocation center;
         if (location != null) {
             // use user's GPS to determine location if GPS it turned on
@@ -210,17 +197,19 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
             // use user's previous location to determine location if GPS is turned off
             center = new GeoLocation(userLocation.getLatitude(), userLocation.getLongitude());
         }
-
-        //query geolocation to find nearbyUsers
-        geoQuery = geoFire.queryAtLocation(center, 5);
+//
+//        //query geolocation to find nearbyUsers
+        geoQuery = geoFire.queryAtLocation(center, value);
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String username, final GeoLocation nearbyLocation) {
+
 //                System.out.println(username + nearbyLocation);
                 //query by country within the list of nearby users
                 ref = new Firebase("https://originchat.firebaseio.com/users/" + username);
 
                 ref.addValueEventListener(new ValueEventListener() {
+
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
 
@@ -245,7 +234,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                     distanceToUser = userLocation.distanceTo(loc) / 1000;
                                     usersFromHome.setDistanceToUser(distanceToUser);
 
-                                }   else {
+                                } else {
                                     // if location is not available, query for user's previous location
                                     queryPreviousLocation = new Firebase("https://originchat.firebaseio.com/locations/" + Constant.USERID);
                                     queryPreviousLocation.addValueEventListener(new ValueEventListener() {
@@ -274,6 +263,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                     });
 
                                 }
+
 
 //                                System.out.println("nearByUsers " + usersFromHome.getEmail() + " is from " + usersFromHome.getCountry() + " is " + distanceToUser + " km away");
                                 nearByUsersList.add(usersFromHome);
@@ -311,11 +301,15 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                             mProfilePic.setImageBitmap(icon);
                                         }
 
-//                                        System.out.println("Distance to user in bindUserItem " + user.getId() + "  " + user.getUserLatitude() + " "  +user.getUserLongitude() + " " + user.getDistanceToUser());
+                                        System.out.println("Distance to user in bindUserItem " + user.getId() + "  " + user.getUserLatitude() + " " + user.getUserLongitude() + " " + user.getDistanceToUser());
 
-                                        String formattedDistance = String.format("%.2f", user.getDistanceToUser());
+                                        if (user.getDistanceToUser() == null || user.getDistanceToUser().equals(null)) {
+                                            mDistanceAway.setText("< 1" + " km away");
+                                        } else {
+                                            String formattedDistance = String.format("%.2f", user.getDistanceToUser());
+                                            mDistanceAway.setText(formattedDistance + " km away");
+                                        }
 
-                                        mDistanceAway.setText(formattedDistance + " km away");
                                     }
 
                                     @Override
@@ -355,6 +349,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                 }
 
                                 if (isAdded()) {
+                                    Collections.sort(nearByUsersList);
                                     mPhotoRecyclerView.setAdapter(new UserAdapter(nearByUsersList));
                                 }
                             }

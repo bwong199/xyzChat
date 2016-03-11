@@ -17,9 +17,8 @@
         android:ems="10"
         android:id="@+id/userDescriptionET"
         android:hint="Tell us about yourself"
-        android:layout_marginTop="78dp"
-        android:layout_below="@+id/countryTV" android:layout_alignParentEnd="true"
-        android:layout_alignParentStart="true"/>
+        android:layout_below="@+id/countryTV" android:layout_alignParentStart="true"
+        android:layout_alignEnd="@+id/usernameET"/>
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -38,8 +37,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Save Profile"
-        android:id="@+id/saveProfileButton" android:layout_below="@+id/userDescriptionET"
-        android:layout_centerHorizontal="true" android:layout_marginTop="10dp"/>
+        android:id="@+id/saveProfileButton"
+        android:layout_alignParentBottom="true" android:layout_centerHorizontal="true"
+        android:layout_marginBottom="31dp"/>
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -66,4 +66,37 @@
         android:id="@+id/countryTV"
         android:hint="Tell us where you are from?"
         android:layout_centerVertical="true" android:layout_alignParentStart="true"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Country"
+        android:id="@+id/countryTV2" android:layout_alignTop="@+id/countryTV"
+        android:layout_toEndOf="@+id/countryTV" android:layout_alignBottom="@+id/countryTV"
+        android:layout_marginLeft="10dp"/>
+    <SeekBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/seekBar"
+        android:layout_below="@+id/userDescriptionET" android:layout_alignParentStart="true"
+        android:layout_marginTop="40dp" android:layout_alignEnd="@+id/userDescriptionET"
+        android:max="100" android:progress="1" android:indeterminate="false"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Distance Sort"
+        android:id="@+id/distanceSort"
+        android:layout_below="@+id/userDescriptionET" android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="100km"
+        android:id="@+id/textView3"
+        android:layout_alignTop="@+id/distanceSort" android:layout_alignEnd="@+id/seekBar"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Distance"
+        android:id="@+id/sortKm" android:layout_below="@+id/seekBar"
+        android:layout_alignStart="@+id/distanceSort" android:layout_alignEnd="@+id/distanceSort"/>
 </RelativeLayout>

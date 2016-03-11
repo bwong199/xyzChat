@@ -1,7 +1,9 @@
 package com.benwong.geochat;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -17,6 +19,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,6 +41,7 @@ public class UserProfileFragment extends Fragment {
     private EditText userDescriptionET;
     private EditText passwordET;
     private TextView countryTV;
+    private TextView countryTV2;
 
 
     private Button saveProfileBtn;
@@ -45,6 +49,9 @@ public class UserProfileFragment extends Fragment {
     String profileImage;
     private ImageView profilePic;
     Firebase ref;
+    private SeekBar distanceControl;
+
+    private TextView sortKM;
 
     public UserProfileFragment() {
     }
@@ -54,22 +61,45 @@ public class UserProfileFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_user_profile, container, false);
 
-        ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID);
-        emailET = (EditText)view.findViewById(R.id.emailET);
+        sortKM = (TextView)view.findViewById(R.id.sortKm);
 
-        usernameET = (EditText)view.findViewById(R.id.usernameET);
-        userDescriptionET = (EditText)view.findViewById(R.id.userDescriptionET);
-        attachmentBtn = (ImageView)view.findViewById(R.id.attachment);
-        profilePic = (ImageView)view.findViewById(R.id.profilePic);
-        countryTV = (TextView)view.findViewById(R.id.countryTV);
+        int value = 0;
 
-        countryTV.setOnClickListener(new View.OnClickListener() {
+        distanceControl = (SeekBar) view.findViewById(R.id.seekBar);
+
+        SharedPreferences prefs = getContext().getSharedPreferences("locationSortPreference", Context.MODE_PRIVATE);
+
+        value = prefs.getInt("seekBarValue", 0); // 0 is default
+
+        distanceControl.setProgress(prefs.getInt("seekBarValue", value));
+
+        sortKM.setText(String.valueOf(prefs.getInt("seekBarValue", value)) );
+
+        distanceControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
-            public void onClick(View v) {
-                selectCountryAlert();
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+                Constant.DISTANCE_SORT = progress;
+
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                SharedPreferences prefs = getContext().getSharedPreferences("locationSortPreference", Context.MODE_PRIVATE);
+                // Don't forget to call commit() when changing preferences.
+                prefs.edit().putInt("seekBarValue", seekBar.getProgress()).commit();
+
+                sortKM.setText(String.valueOf(prefs.getInt("seekBarValue", seekBar.getProgress())));
             }
         });
 
+        ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID);
         ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
@@ -80,6 +110,13 @@ public class UserProfileFragment extends Fragment {
                 Bitmap bmp = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
 
                 profilePic.setImageBitmap(bmp);
+
+                if (!(snapshot.child("country").getValue() == null)) {
+                    countryTV2.setText(String.valueOf(snapshot.child("country").getValue()));
+                } else {
+                    countryTV2.setText("No Country Selected Yet");
+                }
+
             }
 
             @Override
@@ -88,11 +125,29 @@ public class UserProfileFragment extends Fragment {
             }
         });
 
+
+        emailET = (EditText) view.findViewById(R.id.emailET);
+
+        usernameET = (EditText) view.findViewById(R.id.usernameET);
+        userDescriptionET = (EditText) view.findViewById(R.id.userDescriptionET);
+        attachmentBtn = (ImageView) view.findViewById(R.id.attachment);
+        profilePic = (ImageView) view.findViewById(R.id.profilePic);
+        countryTV = (TextView) view.findViewById(R.id.countryTV);
+        countryTV2 = (TextView) view.findViewById(R.id.countryTV2);
+
+        countryTV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                selectCountryAlert();
+            }
+        });
+
+
         attachmentBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI);
-                startActivityForResult(i,Constant.REQUEST_PICK_IMAGE );
+                startActivityForResult(i, Constant.REQUEST_PICK_IMAGE);
 
             }
         });
@@ -101,15 +156,15 @@ public class UserProfileFragment extends Fragment {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 System.out.println(snapshot);
-                if(snapshot.child("username").getValue() != null){
-                    usernameET.setText(String.valueOf(snapshot.child("username").getValue()) );
+                if (!(snapshot.child("username").getValue() == null)) {
+                    usernameET.setText(String.valueOf(snapshot.child("username").getValue()));
                 }
 
-                if(snapshot.child("description").getValue() != null){
-                    userDescriptionET.setText(String.valueOf(snapshot.child("description").getValue()) );
+                if (snapshot.child("description").getValue() != null) {
+                    userDescriptionET.setText(String.valueOf(snapshot.child("description").getValue()));
                 }
-
             }
+
             @Override
             public void onCancelled(FirebaseError firebaseError) {
                 System.out.println("The read failed: " + firebaseError.getMessage());
@@ -118,9 +173,9 @@ public class UserProfileFragment extends Fragment {
 
         emailET.setText(Constant.USEREMAIL);
 
-        passwordET = (EditText)view.findViewById(R.id.passwordET);
+        passwordET = (EditText) view.findViewById(R.id.passwordET);
         passwordET.setText(Constant.USERPASSWORD);
-        saveProfileBtn = (Button)view.findViewById(R.id.saveProfileButton);
+        saveProfileBtn = (Button) view.findViewById(R.id.saveProfileButton);
 
         saveProfileBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -128,7 +183,7 @@ public class UserProfileFragment extends Fragment {
 
                 // change email
 
-                if (! (Constant.USEREMAIL.equals(emailET.getText().toString())) && !(emailET.getText().equals("")) ){
+                if (!(Constant.USEREMAIL.equals(emailET.getText().toString())) && !(emailET.getText().equals(""))) {
                     ref = new Firebase("https://originchat.firebaseio.com/");
                     ref.changeEmail(Constant.USEREMAIL, passwordET.getText().toString(), emailET.getText().toString(), new Firebase.ResultHandler() {
                         @Override
@@ -136,6 +191,7 @@ public class UserProfileFragment extends Fragment {
                             // email changed
                             Toast.makeText(getActivity(), "Email Successfully Changed", Toast.LENGTH_LONG).show();
                         }
+
                         @Override
                         public void onError(FirebaseError firebaseError) {
                             Toast.makeText(getActivity(), "Error saving email", Toast.LENGTH_LONG).show();
@@ -144,7 +200,7 @@ public class UserProfileFragment extends Fragment {
                 }
 
 
-                if (! (Constant.USERPASSWORD.equals(passwordET.getText().toString()))) {
+                if (!(Constant.USERPASSWORD.equals(passwordET.getText().toString()))) {
                     ref = new Firebase("https://originchat.firebaseio.com/");
                     ref.changePassword(passwordET.getText().toString(), Constant.USERPASSWORD, passwordET.getText().toString(), new Firebase.ResultHandler() {
                         @Override
@@ -152,6 +208,7 @@ public class UserProfileFragment extends Fragment {
                             // password changed
                             Toast.makeText(getActivity(), "Password Successfully Changed", Toast.LENGTH_LONG).show();
                         }
+
                         @Override
                         public void onError(FirebaseError firebaseError) {
                             // error encountered
@@ -162,11 +219,19 @@ public class UserProfileFragment extends Fragment {
 
                 //Changing other fields
 
-                ref = new Firebase("https://originchat.firebaseio.com/users/" +  Constant.USERID );
+                if (!(usernameET.getText().toString().equals("")) &&
+                        !(userDescriptionET.getText().toString().equals("")) &&
+                        !(countryTV2.getText().toString().toString().equals("No Country Selected Yet"))) {
 
-                ref.child("username").setValue(usernameET.getText().toString());
-                ref.child("description").setValue(userDescriptionET.getText().toString());
-                Toast.makeText(getActivity(), "Profile Info Successfully Saved", Toast.LENGTH_LONG).show();
+                    ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID);
+                    ref.child("username").setValue(usernameET.getText().toString());
+                    ref.child("description").setValue(userDescriptionET.getText().toString());
+                    Toast.makeText(getActivity(), "Profile Info Successfully Saved", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getContext(), "Please fill in all the fields", Toast.LENGTH_LONG).show();
+                }
+
+
             }
         });
 
@@ -175,7 +240,7 @@ public class UserProfileFragment extends Fragment {
     }
 
     @Override
-     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         System.out.println("Fragment onActivityResult" + " " + requestCode + " " + resultCode + " " + data);
@@ -273,13 +338,13 @@ public class UserProfileFragment extends Fragment {
                                 });
                         builderInner.show();
 
-                        countryTV.setText(strName);
+                        countryTV2.setText(strName);
 
                         ref = new Firebase("https://originchat.firebaseio.com/");
 
                         ref.child("users").child(Constant.USERID).child("country").setValue(strName);
 
-                             }
+                    }
                 });
         builderSingle.show();
     }

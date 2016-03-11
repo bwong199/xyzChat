@@ -3,7 +3,7 @@ package com.benwong.geochat;
 /**
  * Created by benwong on 2016-03-04.
  */
-public class User {
+public class User implements Comparable<User> {
 
     private String email;
     private String country;
@@ -92,4 +92,8 @@ public class User {
     }
 
 
+    @Override
+    public int compareTo(User another) {
+        return Float.compare(this.getDistanceToUser(), another.getDistanceToUser());
+    }
 }
