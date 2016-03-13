@@ -79,6 +79,10 @@ public class RegisterFragment extends Fragment implements View.OnClickListener {
 
                 userRef.child("email").setValue(emailRegister.getText().toString());
 
+                if(!(Constant.FacebookID.equals(""))){
+                    userRef.child("facebookId").setValue(Constant.FacebookID);
+                }
+
 
                 Toast.makeText(getContext(), "User successfully created.", Toast.LENGTH_LONG).show();
 //                Intent intent = new Intent(getActivity(), MainActivity.class);
@@ -105,7 +109,7 @@ public class RegisterFragment extends Fragment implements View.OnClickListener {
                     @Override
                     public void onAuthenticationError(FirebaseError firebaseError) {
                         // there was an error
-                        Toast.makeText(getContext(), "Error logging in", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), firebaseError.toString(), Toast.LENGTH_LONG).show();
                         System.out.println(firebaseError);
                     }
                 });

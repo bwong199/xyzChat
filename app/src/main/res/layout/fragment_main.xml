@@ -14,16 +14,23 @@
 
                >
 
-
+    <com.facebook.login.widget.LoginButton
+        android:id="@+id/login_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/facebookicon"
+        android:layout_below="@+id/registerLink" android:layout_centerHorizontal="true"
+        android:layout_marginTop="59dp"/>
 
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/emailLogin"
         android:hint="Email"
-        android:layout_alignParentTop="true" android:layout_alignStart="@+id/passwordLogin"
-        android:layout_marginTop="49dp" android:layout_alignEnd="@+id/passwordLogin"
-        android:gravity="center_horizontal"/>
+        android:gravity="center_horizontal"
+        android:layout_alignParentTop="true" android:layout_alignParentEnd="true"
+        android:layout_marginTop="67dp" android:layout_alignParentStart="true"/>
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -36,12 +43,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Login"
-        android:id="@+id/loginButton" android:layout_below="@+id/passwordLogin"
-        android:layout_centerHorizontal="true" android:layout_marginTop="47dp"/>
+        android:id="@+id/loginButton"
+        android:layout_below="@+id/passwordLogin" android:layout_centerHorizontal="true"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Register"
         android:id="@+id/registerLink"
-        android:layout_centerVertical="true" android:layout_centerHorizontal="true"/>
+        android:layout_below="@+id/loginButton" android:layout_centerHorizontal="true"/>
 </RelativeLayout>

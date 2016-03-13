@@ -248,8 +248,6 @@ public class UserProfileFragment extends Fragment {
 
         if (resultCode == -1 && data != null) {
 
-            System.out.println("Made it pass the if statement");
-
             Uri selectedImage = data.getData();
 
             try {

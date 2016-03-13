@@ -1,8 +1,8 @@
 package com.benwong.geochat;
 
 import android.content.Intent;
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -74,124 +74,124 @@ public class MessageFragment extends Fragment {
 //
 //                System.out.println(dataSnapshot.getKey() + " " + dataSnapshot.child("senderId").getValue() + " " + dataSnapshot.child("recipientId").getValue());
 
-                //Retrieve messages where the "senderId" equals the current user's ID
-                nestedMessageListener = new Firebase("https://originchat.firebaseio.com/messages");
-                Query nestedQueryRef = nestedMessageListener.orderByChild("recipientId").equalTo(Constant.USERID);
-                nestedQueryRef.addValueEventListener(new ValueEventListener() {
+        //Retrieve messages where the "senderId" equals the current user's ID
+        nestedMessageListener = new Firebase("https://originchat.firebaseio.com/messages");
+        Query nestedQueryRef = nestedMessageListener.orderByChild("recipientId").equalTo(Constant.USERID);
+        nestedQueryRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                    Message facts = postSnapshot.getValue(Message.class);
+
+                    System.out.println(facts.getRecipientId() + " - " + facts.getMessage());
+                    Message message = new Message();
+                    message.setDate(facts.getDate());
+                    message.setMessage(facts.getMessage());
+                    message.setRecipientId(facts.getRecipientId());
+                    message.setSenderId(facts.getSenderId());
+                    mMessageList.add(message);
+                    System.out.println(mMessageList);
+
+                }
+
+                //Create holder to put in adapter
+                class MessageHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+                    private Message mMessage;
+                    TextView mSenderTV;
+                    TextView mMessageTV;
+                    TextView mDateTV;
+
+                    public MessageHolder(View itemView) {
+                        super(itemView);
+                        itemView.setOnClickListener(this);
+                        mSenderTV = (TextView) itemView.findViewById(R.id.senderTV);
+                        mMessageTV = (TextView) itemView.findViewById(R.id.messageTV);
+                        mDateTV = (TextView) itemView.findViewById(R.id.dateTV);
+                    }
+
+                    public void bindMessageItem(Message message) {
+                        mMessage = message;
+
+
+                        //query for Sender's name based on ID
+                        Firebase ref = new Firebase("https://originchat.firebaseio.com/users/" + message.getSenderId());
+                        ref.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                System.out.println("chat sender name" + dataSnapshot.child("username").getValue());
+                                mSenderTV.setText(String.valueOf(dataSnapshot.child("username").getValue()));
+                            }
+
+                            @Override
+                            public void onCancelled(FirebaseError firebaseError) {
+
+                            }
+                        });
+
+                        mMessageTV.setText(message.getMessage());
+
+                        SimpleDateFormat dt1 = new SimpleDateFormat("dd-MMM, h:m a");
+
+                        mDateTV.setText(dt1.format(message.getDate()));
+                    }
+
                     @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
+                    public void onClick(View v) {
+                        Intent intent = new Intent(getActivity(), UserDetailActivity.class);
+                        intent.putExtra("userId", mMessage.getSenderId());
+                        startActivity(intent);
+                    }
+                }
 
-                        for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                            Message facts = postSnapshot.getValue(Message.class);
+                class MessageAdapter extends RecyclerView.Adapter<MessageHolder> {
 
-                            System.out.println(facts.getRecipientId() + " - " + facts.getMessage());
-                            Message message = new Message();
-                            message.setDate(facts.getDate());
-                            message.setMessage(facts.getMessage());
-                            message.setRecipientId(facts.getRecipientId());
-                            message.setSenderId(facts.getSenderId());
-                            mMessageList.add(message);
-                            System.out.println(mMessageList);
+                    private List<Message> mMessageItems;
 
-                        }
+                    public MessageAdapter(List<Message> messageItems) {
+                        mMessageItems = messageItems;
+                    }
 
-                        //Create holder to put in adapter
-                        class MessageHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-
-                            private Message mMessage;
-                            TextView mSenderTV;
-                            TextView mMessageTV;
-                            TextView mDateTV;
-
-                            public MessageHolder(View itemView) {
-                                super(itemView);
-                                itemView.setOnClickListener(this);
-                                mSenderTV = (TextView) itemView.findViewById(R.id.senderTV);
-                                mMessageTV = (TextView) itemView.findViewById(R.id.messageTV);
-                                mDateTV = (TextView) itemView.findViewById(R.id.dateTV);
-                            }
-
-                            public void bindMessageItem(Message message) {
-                                mMessage = message;
-
-
-                                //query for Sender's name based on ID
-                                Firebase ref = new Firebase("https://originchat.firebaseio.com/users/" + message.getSenderId());
-                                ref.addValueEventListener(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(DataSnapshot dataSnapshot) {
-                                        System.out.println("chat sender name" + dataSnapshot.child("username").getValue());
-                                        mSenderTV.setText(String.valueOf(dataSnapshot.child("username").getValue()));
-                                    }
-
-                                    @Override
-                                    public void onCancelled(FirebaseError firebaseError) {
-
-                                    }
-                                });
-
-                                mMessageTV.setText(message.getMessage());
-
-                                SimpleDateFormat dt1 = new SimpleDateFormat("dd-MMM, h:m a");
-
-                                mDateTV.setText(dt1.format(message.getDate()));
-                            }
-
-                            @Override
-                            public void onClick(View v) {
-                                Intent intent = new Intent(getActivity(), UserDetailActivity.class);
-                                intent.putExtra("userId", mMessage.getSenderId());
-                                startActivity(intent);
-                            }
-                        }
-
-                        class MessageAdapter extends RecyclerView.Adapter<MessageHolder> {
-
-                            private List<Message> mMessageItems;
-
-                            public MessageAdapter(List<Message> messageItems) {
-                                mMessageItems = messageItems;
-                            }
-
-                            @Override
-                            public MessageHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+                    @Override
+                    public MessageHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
 //                                TextView textView = new TextView(getActivity());
-                                LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
-                                View view = layoutInflater.inflate(R.layout.list_item_message_master, viewGroup, false);
-                                return new MessageHolder(view);
-                            }
+                        LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
+                        View view = layoutInflater.inflate(R.layout.list_item_message_master, viewGroup, false);
+                        return new MessageHolder(view);
+                    }
 
-                            @Override
-                            public void onBindViewHolder(MessageHolder messageHolder, int position) {
-                                Message messageItem = mMessageItems.get(position);
-                                messageHolder.bindMessageItem(messageItem);
-                            }
+                    @Override
+                    public void onBindViewHolder(MessageHolder messageHolder, int position) {
+                        Message messageItem = mMessageItems.get(position);
+                        messageHolder.bindMessageItem(messageItem);
+                    }
 
-                            @Override
-                            public int getItemCount() {
-                                return mMessageItems.size();
-                            }
-                        }
+                    @Override
+                    public int getItemCount() {
+                        return mMessageItems.size();
+                    }
+                }
 
 //                        for(Message x : mMessageList){
 //                            System.out.println(x.getSenderId() + " sent " + x.getMessage() + " to " + x.getRecipientId());
 //                        }
 //
 //                        System.out.println("before setting up adapter");
-                        if (isAdded()) {
+                if (isAdded()) {
 
-                            Collections.sort(mMessageList);
-                            mMessageRecyclerView.setAdapter(new MessageAdapter(mMessageList));
-                        }
-                    }
+                    Collections.sort(mMessageList);
+                    mMessageRecyclerView.setAdapter(new MessageAdapter(mMessageList));
+                }
+            }
 
-                    @Override
-                    public void onCancelled(FirebaseError firebaseError) {
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
 
-                    }
-                    //need to delete when done
+            }
+            //need to delete when done
 //                           mListview.setAdapter(arrayAdapter);
-                });
+        });
 //            }
 
 //            @Override

@@ -21,7 +21,6 @@ import android.widget.TextView;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
-import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 
 import java.text.SimpleDateFormat;
@@ -45,10 +44,12 @@ public class UserDetailFragment extends Fragment {
     private Button messageBtn;
     private Firebase messageListener;
     private List<Message> mMessageList;
+    private List<Message> mMessageListHolder;
     private ListView mListview;
     ArrayAdapter<Message> arrayAdapter;
     private RecyclerView mMessageRecyclerView;
-
+    int loopCount;
+    int loopCount2;
 
     public UserDetailFragment() {
     }
@@ -66,6 +67,8 @@ public class UserDetailFragment extends Fragment {
         messageBtn = (Button) view.findViewById(R.id.button);
         final ArrayAdapter<Message> arrayAdapter;
         mMessageList = new ArrayList<Message>();
+        mMessageListHolder = new ArrayList<Message>();
+
 //        mListview = (ListView) view.findViewById(R.id.listView);
 
 //        arrayAdapter = new ArrayAdapter<Message>(getActivity(), android.R.layout.simple_list_item_1, mMessageList);
@@ -95,7 +98,7 @@ public class UserDetailFragment extends Fragment {
                     profilePic.setImageBitmap(icon);
                 }
 
-                if (dataSnapshot.child("description").getValue() == null || dataSnapshot.child("description").getValue().equals("null") ) {
+                if (dataSnapshot.child("description").getValue() == null || dataSnapshot.child("description").getValue().equals("null")) {
                     descriptionTV.setText("I haven't written anything about myself yet.");
                 } else {
                     descriptionTV.setText(String.valueOf(dataSnapshot.child("description").getValue()));
@@ -123,148 +126,87 @@ public class UserDetailFragment extends Fragment {
         });
 
         messageListener = new Firebase("https://originchat.firebaseio.com/messages");
-        Query queryRef = messageListener.orderByChild("senderId").equalTo(Constant.USERID);
+//        Query queryRef = messageListener.orderByChild("senderId").equalTo(Constant.USERID);
 
-        queryRef.addValueEventListener(new ValueEventListener() {
+        messageListener.addValueEventListener(new ValueEventListener() {
+
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+//                System.out.println(dataSnapshot);
+//                loopCount = 0;
                 mMessageList.clear();
-                System.out.println(dataSnapshot);
-
-                System.out.println("There are " + dataSnapshot.getChildrenCount() + " messages");
+//                System.out.println(dataSnapshot);
+////                System.out.println("There are " + dataSnapshot.getChildrenCount() + " messages");
                 for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+//                    System.out.println(postSnapshot);
                     Message facts = postSnapshot.getValue(Message.class);
-
-                    if (facts.getRecipientId().toString().equals(intent.getStringExtra("userId"))) {
-
+                    if (facts.getRecipientId().toString().equals(intent.getStringExtra("userId")) && facts.getSenderId().equals(Constant.USERID) ||
+                            facts.getRecipientId().toString().equals(Constant.USERID) && facts.getSenderId().toString().equals(intent.getStringExtra("userId"))
+                            ) {
+                        System.out.println(facts.getSenderId() + " sent " + facts.getMessage() + " to " + facts.getRecipientId());
                         Message message = new Message();
                         message.setDate(facts.getDate());
                         message.setMessage(facts.getMessage());
                         message.setRecipientId(facts.getRecipientId());
                         message.setSenderId(facts.getSenderId());
                         mMessageList.add(message);
-                    }
 
-                }
-
-                System.out.println(dataSnapshot.getKey() + " " + dataSnapshot.child("senderId").getValue() + " " + dataSnapshot.child("recipientId").getValue());
-
-                nestedMessageListener = new Firebase("https://originchat.firebaseio.com/messages");
-                Query nestedQueryRef = nestedMessageListener.orderByChild("recipientId").equalTo(Constant.USERID);
-                nestedQueryRef.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-
-                        for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                            Message facts = postSnapshot.getValue(Message.class);
-
-                            if (facts.getSenderId().toString().equals(intent.getStringExtra("userId"))) {
-                                System.out.println(facts.getRecipientId() + " - " + facts.getMessage());
-                                Message message = new Message();
-                                message.setDate(facts.getDate());
-                                message.setMessage(facts.getMessage());
-                                message.setRecipientId(facts.getRecipientId());
-                                message.setSenderId(facts.getSenderId());
-                                mMessageList.add(message);
-                                System.out.println(mMessageList);
-                            }
-                        }
-
-                        //Create holder to put in adapter
-                        class MessageHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-
-                            private Message mMessage;
-                            TextView mSenderTV;
-                            TextView mMessageTV;
-                            TextView mDateTV;
-
-                            public MessageHolder(View itemView) {
-                                super(itemView);
-                                itemView.setOnClickListener(this);
-                                mSenderTV = (TextView) itemView.findViewById(R.id.senderTV);
-                                mMessageTV = (TextView) itemView.findViewById(R.id.messageTV);
-                                mDateTV = (TextView)itemView.findViewById(R.id.dateTV);
-                            }
-
-                            public void bindMessageItem(Message message) {
-                                mMessage = message;
-
-
-                                //query for Sender's name based on ID
-                                Firebase ref = new Firebase("https://originchat.firebaseio.com/users/" + message.getSenderId());
-                                ref.addValueEventListener(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(DataSnapshot dataSnapshot) {
-                                        System.out.println("chat sender name" +dataSnapshot.child("username").getValue() );
-                                        mSenderTV.setText(String.valueOf(dataSnapshot.child("username").getValue()));
-                                    }
-
-                                    @Override
-                                    public void onCancelled(FirebaseError firebaseError) {
-
-                                    }
-                                });
-
-                                mMessageTV.setText(message.getMessage());
-
-                                SimpleDateFormat dt1 = new SimpleDateFormat("dd-MMM, h:m a");
-
-                                mDateTV.setText(dt1.format(message.getDate()));
-                            }
-
-                            @Override
-                            public void onClick(View v) {
-
-                            }
-                        }
-
-                        class MessageAdapter extends RecyclerView.Adapter<MessageHolder> {
-
-                            private List<Message> mMessageItems;
-
-                            public MessageAdapter(List<Message> messageItems) {
-                                mMessageItems = messageItems;
-                            }
-
-                            @Override
-                            public MessageHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
-//                                TextView textView = new TextView(getActivity());
-                                LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
-                                View view = layoutInflater.inflate(R.layout.list_item_message, viewGroup, false);
-                                return new MessageHolder(view);
-                            }
-
-                            @Override
-                            public void onBindViewHolder(MessageHolder messageHolder, int position) {
-                                Message messageItem = mMessageItems.get(position);
-                                messageHolder.bindMessageItem(messageItem);
-                            }
-
-                            @Override
-                            public int getItemCount() {
-                                return mMessageItems.size();
-                            }
-                        }
-
-//                        for(Message x : mMessageList){
-//                            System.out.println(x.getSenderId() + " sent " + x.getMessage() + " to " + x.getRecipientId());
-//                        }
-//
-//                        System.out.println("before setting up adapter");
                         if (isAdded()) {
-
                             Collections.sort(mMessageList);
                             mMessageRecyclerView.setAdapter(new MessageAdapter(mMessageList));
+
                         }
-                    }
-
-                    @Override
-                    public void onCancelled(FirebaseError firebaseError) {
 
                     }
-                    //need to delete when done
-//                           mListview.setAdapter(arrayAdapter);
-                });
+//
+                }
+
+//                if (loopCount == mMessageList.size()) {
+//                    System.out.println("loopcount " + loopCount);
+//                    System.out.println("mMessageList " + mMessageList.size());
+//                    nestedMessageListener = new Firebase("https://originchat.firebaseio.com/messages");
+//                    Query nestedQueryRef = nestedMessageListener.orderByChild("recipientId").equalTo(Constant.USERID);
+//                    nestedQueryRef.addValueEventListener(new ValueEventListener() {
+//                        @Override
+//                        public void onDataChange(DataSnapshot dataSnapshot) {
+//                            loopCount2 = 0;
+//                            System.out.println(" nested datasnapshot " + dataSnapshot);
+//                            for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+//                                Message facts = postSnapshot.getValue(Message.class);
+//                                if (facts.getSenderId().toString().equals(intent.getStringExtra("userId"))) {
+//                                    Message message = new Message();
+//                                    message.setDate(facts.getDate());
+//                                    message.setMessage(facts.getMessage());
+//                                    message.setRecipientId(facts.getRecipientId());
+//                                    message.setSenderId(facts.getSenderId());
+//                                    mMessageList.add(message);
+//                                    mMessageListHolder.add(message);
+//                                    loopCount2++;
+//
+//
+//                                }
+//                            }
+//                        }
+//
+//                        @Override
+//                        public void onCancelled(FirebaseError firebaseError) {
+//
+//                        }
+//
+//                    });
+//                }
+
+//
+//                if (loopCount2 == mMessageListHolder.size()) {
+//                    System.out.println("loopcount2 " + loopCount);
+//                    System.out.println("datasnapshotcount " + dataSnapshot.getChildrenCount());
+//                    System.out.println(mMessageList.size() + "size of messageList");
+//                    if (isAdded()) {
+//                        Collections.sort(mMessageList);
+//                        mMessageRecyclerView.setAdapter(new MessageAdapter(mMessageList));
+//
+//                    }
+//                }
             }
 
             @Override
@@ -272,7 +214,93 @@ public class UserDetailFragment extends Fragment {
 
             }
         });
+
+
         return view;
     }
+
+    private void updateUI() {
+        if (isAdded()) {
+            Collections.sort(mMessageList);
+            mMessageRecyclerView.setAdapter(new MessageAdapter(mMessageList));
+
+        }
+    }
+
+    //Create holder to put in adapter
+    class MessageHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+        private Message mMessage;
+        TextView mSenderTV;
+        TextView mMessageTV;
+        TextView mDateTV;
+
+        public MessageHolder(View itemView) {
+            super(itemView);
+            itemView.setOnClickListener(this);
+            mSenderTV = (TextView) itemView.findViewById(R.id.senderTV);
+            mMessageTV = (TextView) itemView.findViewById(R.id.messageTV);
+            mDateTV = (TextView) itemView.findViewById(R.id.dateTV);
+        }
+
+        public void bindMessageItem(Message message) {
+            mMessage = message;
+
+            //query for Sender's name based on ID
+            Firebase ref = new Firebase("https://originchat.firebaseio.com/users/" + message.getSenderId());
+            ref.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+//                    System.out.println("chat sender name" +dataSnapshot.child("username").getValue() );
+                    mSenderTV.setText(String.valueOf(dataSnapshot.child("username").getValue()));
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+
+            mMessageTV.setText(message.getMessage());
+
+            SimpleDateFormat dt1 = new SimpleDateFormat("dd-MMM, h:m a");
+
+            mDateTV.setText(dt1.format(message.getDate()));
+        }
+
+        @Override
+        public void onClick(View v) {
+
+        }
+    }
+
+    class MessageAdapter extends RecyclerView.Adapter<MessageHolder> {
+
+        private List<Message> mMessageItems;
+
+        public MessageAdapter(List<Message> messageItems) {
+            mMessageItems = messageItems;
+        }
+
+        @Override
+        public MessageHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+//                                TextView textView = new TextView(getActivity());
+            LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
+            View view = layoutInflater.inflate(R.layout.list_item_message, viewGroup, false);
+            return new MessageHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(MessageHolder messageHolder, int position) {
+            Message messageItem = mMessageItems.get(position);
+            messageHolder.bindMessageItem(messageItem);
+        }
+
+        @Override
+        public int getItemCount() {
+            return mMessageItems.size();
+        }
+    }
+
 
 }

@@ -1,8 +1,11 @@
 package com.benwong.geochat;
 
+import com.shaded.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Created by benwong on 2016-03-04.
  */
+@JsonIgnoreProperties(ignoreUnknown=true)
 public class User implements Comparable<User> {
 
     private String email;

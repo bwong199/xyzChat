@@ -66,6 +66,8 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
     float distanceToUser;
     private ImageView profileImageView;
 
+
+
     private GeoQuery geoQuery;
     private int distanceProgress;
 
@@ -81,6 +83,9 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 //
 
         usernameTV = (TextView) view.findViewById(R.id.usernameTV);
+
+
+
 
 
         // get value from the distance sort
@@ -142,10 +147,17 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 //                    System.out.println("user location " + dataSnapshot);
 //                    System.out.println("user location " + dataSnapshot.child("l").child("0").getValue());
 //                    System.out.println("user location " + dataSnapshot.child("l").child("1").getValue());
-                    userLocation = new Location("");
-                    userLocation.setLatitude((Double) dataSnapshot.child("l").child("0").getValue());
-                    userLocation.setLongitude((Double) dataSnapshot.child("l").child("1").getValue());
-                    setAddress(userLocation);
+                    try{
+                        userLocation = new Location("");
+                        userLocation.setLatitude((Double) dataSnapshot.child("l").child("0").getValue());
+                        userLocation.setLongitude((Double) dataSnapshot.child("l").child("1").getValue());
+                        setAddress(userLocation);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+
+
+
                 }
 
                 @Override
@@ -163,7 +175,6 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 try {
-//                    System.out.println("query for user country" + dataSnapshot);
                     if (dataSnapshot.child("country").getValue() == null || dataSnapshot.child("username").getValue() == null) {
                         Intent intent = new Intent(getActivity(), UserProfileActivity.class);
                         startActivity(intent);
@@ -301,7 +312,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                                             mProfilePic.setImageBitmap(icon);
                                         }
 
-                                        System.out.println("Distance to user in bindUserItem " + user.getId() + "  " + user.getUserLatitude() + " " + user.getUserLongitude() + " " + user.getDistanceToUser());
+//                                        System.out.println("Distance to user in bindUserItem " + user.getId() + "  " + user.getUserLatitude() + " " + user.getUserLongitude() + " " + user.getDistanceToUser());
 
                                         if (user.getDistanceToUser() == null || user.getDistanceToUser().equals(null)) {
                                             mDistanceAway.setText("< 1" + " km away");
@@ -437,6 +448,8 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                 Log.i("address", addressHolder);
             }
             addressTV.setText(addressHolder + "\n");
+        }else{
+            addressTV.setText("Please turn on GPS. Address not found.");
         }
     }
 

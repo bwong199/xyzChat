@@ -40,4 +40,5 @@ dependencies {
     compile 'com.android.support:design:23.2.0'
     compile 'com.mcxiaoke.volley:library:1.0.19'
     compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'com.facebook.android:facebook-android-sdk:[4,5)'
 }
