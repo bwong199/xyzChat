@@ -6,4 +6,5 @@
     <string name="title_activity_user_detail">UserDetailActivity</string>
     <string name="title_activity_message">MessageActivity</string>
     <string name="facebook_app_id">235590760116338</string>
+    <string name="banner_ad_unit_id">ca-app-pub-4435357257194162/5126052731</string>
 </resources>

@@ -13,6 +13,8 @@ import android.widget.Toast;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 
 import java.util.Map;
 
@@ -45,6 +47,12 @@ public class RegisterFragment extends Fragment implements View.OnClickListener {
 
         registerButton = (Button) view.findViewById(R.id.registerButton);
         registerButton.setOnClickListener(this);
+
+        AdView adView = (AdView) view.findViewById(R.id.adView);
+
+        AdRequest adRequest = new AdRequest.Builder().build();
+
+        adView.loadAd(adRequest);
 
         return view;
     }
@@ -79,7 +87,7 @@ public class RegisterFragment extends Fragment implements View.OnClickListener {
 
                 userRef.child("email").setValue(emailRegister.getText().toString());
 
-                if(!(Constant.FacebookID.equals(""))){
+                if(!(Constant.FacebookID == null)){
                     userRef.child("facebookId").setValue(Constant.FacebookID);
                 }
 

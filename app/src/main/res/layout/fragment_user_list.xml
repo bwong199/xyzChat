@@ -21,7 +21,7 @@
     <TextView
         android:layout_width="116dp"
         android:layout_height="wrap_content"
-        android:text="Address"
+        android:text="Please turn on GPS. Address not found."
         android:id="@+id/addressTV" android:layout_gravity="right"
         android:layout_below="@+id/usernameTV" android:layout_alignStart="@+id/usernameTV"
         android:layout_alignWithParentIfMissing="false" android:layout_alignParentRight="true"

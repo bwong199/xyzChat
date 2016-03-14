@@ -138,6 +138,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                 e.printStackTrace();
             }
         } else {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1, 0.0f, this);
             Toast.makeText(getActivity(), "Please turn on GPS for the most accurate location", Toast.LENGTH_LONG).show();
             // query for signed-in user's last location if currrent location doesn't exist so app can still find nearby users if GPS is turned off
             queryPreviousLocation = new Firebase("https://originchat.firebaseio.com/locations/" + Constant.USERID);

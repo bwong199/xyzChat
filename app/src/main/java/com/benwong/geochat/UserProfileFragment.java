@@ -95,7 +95,7 @@ public class UserProfileFragment extends Fragment {
                 // Don't forget to call commit() when changing preferences.
                 prefs.edit().putInt("seekBarValue", seekBar.getProgress()).commit();
 
-                sortKM.setText(String.valueOf(prefs.getInt("seekBarValue", seekBar.getProgress())));
+                sortKM.setText(String.valueOf(prefs.getInt("seekBarValue", seekBar.getProgress()))+ " km");
             }
         });
 
@@ -135,7 +135,7 @@ public class UserProfileFragment extends Fragment {
         countryTV = (TextView) view.findViewById(R.id.countryTV);
         countryTV2 = (TextView) view.findViewById(R.id.countryTV2);
 
-        countryTV.setOnClickListener(new View.OnClickListener() {
+        countryTV2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 selectCountryAlert();

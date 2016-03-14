@@ -26,6 +26,8 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 
 
 /**
@@ -133,6 +135,8 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
         passwordLogin = (EditText) view.findViewById(R.id.passwordLogin);
         mLoginButton = (Button) view.findViewById(R.id.loginButton);
         mLoginButton.setOnClickListener(this);
+
+
 
 
         //fb login
