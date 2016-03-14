@@ -1,6 +1,7 @@
 package com.benwong.geochat;
 
 import android.support.v4.app.Fragment;
+import android.view.Menu;
 
 import com.firebase.client.Firebase;
 
@@ -12,12 +13,12 @@ public class RegisterActivity extends SingleFragmentActivity {
         return new RegisterFragment();
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.menu_main, menu);
-//        return true;
-//    }
-//
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_blank, menu);
+        return true;
+    }
+
 //    @Override
 //    public boolean onOptionsItemSelected(MenuItem item) {
 //        int id = item.getItemId();

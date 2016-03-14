@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Base64;
 import android.util.Log;
+import android.view.Menu;
 
 import com.facebook.login.LoginManager;
 
@@ -45,6 +46,11 @@ public class MainActivity extends SingleFragmentActivity {
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_blank, menu);
+        return true;
+    }
 
 
     @Override
