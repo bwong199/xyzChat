@@ -139,7 +139,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
             }
         } else {
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1, 0.0f, this);
-            Toast.makeText(getActivity(), "Please turn on GPS for the most accurate location", Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), R.string.no_gps_warning, Toast.LENGTH_LONG).show();
             // query for signed-in user's last location if currrent location doesn't exist so app can still find nearby users if GPS is turned off
             queryPreviousLocation = new Firebase("https://originchat.firebaseio.com/locations/" + Constant.USERID);
             queryPreviousLocation.addValueEventListener(new ValueEventListener() {
@@ -316,7 +316,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
 //                                        System.out.println("Distance to user in bindUserItem " + user.getId() + "  " + user.getUserLatitude() + " " + user.getUserLongitude() + " " + user.getDistanceToUser());
 
                                         if (user.getDistanceToUser() == null || user.getDistanceToUser().equals(null)) {
-                                            mDistanceAway.setText("< 1" + " km away");
+                                            mDistanceAway.setText(R.string.null_distance_warning);
                                         } else {
                                             String formattedDistance = String.format("%.2f", user.getDistanceToUser());
                                             mDistanceAway.setText(formattedDistance + " km away");
@@ -450,7 +450,7 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
             }
             addressTV.setText(addressHolder + "\n");
         }else{
-            addressTV.setText("Please turn on GPS. Address not found.");
+            addressTV.setText(R.string.no_gps_warning);
         }
     }
 

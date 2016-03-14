@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/usernameTV" android:layout_gravity="right" android:text="Username"
         android:layout_alignParentTop="true" android:layout_alignParentEnd="true"
-        android:layout_toEndOf="@+id/country" android:layout_alignParentRight="true"
+        android:layout_toEndOf="@+id/country"
         android:gravity="right" android:layout_margin="10dp"/>
     <TextView
         android:layout_width="wrap_content"
@@ -24,7 +24,7 @@
         android:text="Please turn on GPS. Address not found."
         android:id="@+id/addressTV" android:layout_gravity="right"
         android:layout_below="@+id/usernameTV" android:layout_alignStart="@+id/usernameTV"
-        android:layout_alignWithParentIfMissing="false" android:layout_alignParentRight="true"
+        android:layout_alignWithParentIfMissing="false" android:layout_alignParentEnd="true"
         android:gravity="right" android:layout_margin="10dp"/>
 
     <android.support.v7.widget.RecyclerView

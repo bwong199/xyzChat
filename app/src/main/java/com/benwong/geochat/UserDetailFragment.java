@@ -99,7 +99,7 @@ public class UserDetailFragment extends Fragment {
                 }
 
                 if (dataSnapshot.child("description").getValue() == null || dataSnapshot.child("description").getValue().equals("null")) {
-                    descriptionTV.setText("I haven't written anything about myself yet.");
+                    descriptionTV.setText(R.string.no_user_description);
                 } else {
                     descriptionTV.setText(String.valueOf(dataSnapshot.child("description").getValue()));
                 }

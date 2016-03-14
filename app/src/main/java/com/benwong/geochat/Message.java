@@ -12,9 +12,18 @@ public class Message implements Comparable<Message> {
     private String recipientId;
     private String message;
     private Date date;
+    private String widgetMessage;
 
     @JsonIgnoreProperties(ignoreUnknown=true)
     public Message() {
+    }
+
+    public String getWidgetMessage() {
+        return widgetMessage;
+    }
+
+    public void setWidgetMessage(String widgetMessage) {
+        this.widgetMessage = widgetMessage;
     }
 
     public String getSenderId() {

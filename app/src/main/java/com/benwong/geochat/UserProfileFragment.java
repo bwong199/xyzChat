@@ -189,12 +189,12 @@ public class UserProfileFragment extends Fragment {
                         @Override
                         public void onSuccess() {
                             // email changed
-                            Toast.makeText(getActivity(), "Email Successfully Changed", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getActivity(), R.string.email_save_success, Toast.LENGTH_LONG).show();
                         }
 
                         @Override
                         public void onError(FirebaseError firebaseError) {
-                            Toast.makeText(getActivity(), "Error saving email", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getActivity(), R.string.email_save_error, Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -206,13 +206,13 @@ public class UserProfileFragment extends Fragment {
                         @Override
                         public void onSuccess() {
                             // password changed
-                            Toast.makeText(getActivity(), "Password Successfully Changed", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getActivity(), R.string.password_save_success, Toast.LENGTH_LONG).show();
                         }
 
                         @Override
                         public void onError(FirebaseError firebaseError) {
                             // error encountered
-                            Toast.makeText(getActivity(), "Error saving password", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getActivity(), R.string.password_save_error, Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -226,9 +226,9 @@ public class UserProfileFragment extends Fragment {
                     ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID);
                     ref.child("username").setValue(usernameET.getText().toString());
                     ref.child("description").setValue(userDescriptionET.getText().toString());
-                    Toast.makeText(getActivity(), "Profile Info Successfully Saved", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), R.string.profile_save_success_msg, Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(getContext(), "Please fill in all the fields", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), R.string.fill_in_fields_warning, Toast.LENGTH_LONG).show();
                 }
 
 
@@ -268,7 +268,7 @@ public class UserProfileFragment extends Fragment {
                 ref.child("profilePic").setValue(profileImage, new Firebase.CompletionListener() {
                     @Override
                     public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                        Toast.makeText(getActivity(), "Profile Picture Saved Successfully", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getActivity(), R.string.save_profile_pic_msg, Toast.LENGTH_LONG).show();
 
                         byte[] imageAsBytes = Base64.decode(profileImage, Base64.DEFAULT);
                         Bitmap bmp = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
@@ -282,7 +282,7 @@ public class UserProfileFragment extends Fragment {
             }
 
         } else {
-            Toast.makeText(getActivity(), "Error Uploading File", Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), R.string.error_uploading_profile_pic, Toast.LENGTH_LONG).show();
         }
 
     }
@@ -290,7 +290,7 @@ public class UserProfileFragment extends Fragment {
     private void selectCountryAlert() {
         AlertDialog.Builder builderSingle = new AlertDialog.Builder(getActivity());
 
-        builderSingle.setTitle("Select Country of Origin");
+        builderSingle.setTitle(R.string.select_country);
 
         final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
                 getActivity(),
@@ -323,7 +323,7 @@ public class UserProfileFragment extends Fragment {
                         AlertDialog.Builder builderInner = new AlertDialog.Builder(
                                 getActivity());
                         builderInner.setMessage(strName);
-                        builderInner.setTitle("Your Selected Item is");
+                        builderInner.setTitle(R.string.selected_country_message);
                         builderInner.setPositiveButton(
                                 "Ok",
                                 new DialogInterface.OnClickListener() {

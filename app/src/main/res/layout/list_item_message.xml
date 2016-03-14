@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:text="Message"
         android:id="@+id/messageTV" android:layout_alignBottom="@+id/senderTV"
-        android:layout_toEndOf="@+id/senderTV" android:layout_marginLeft="10dp"/>
+        android:layout_toEndOf="@+id/senderTV" android:layout_marginStart="10dp"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
