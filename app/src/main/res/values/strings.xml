@@ -20,4 +20,7 @@
     <string name="email_save_error">Error saving email</string>
     <string name="password_save_success">Password Successfully Changed</string>
     <string name="password_save_error">Error saving password</string>
+    <string name="register_button">register</string>
+    <string name="send_message_button">Send Message</string>
+    <string name="save_profile_button">Save Profile Button</string>
 </resources>

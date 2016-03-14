@@ -26,11 +26,15 @@
         android:layout_below="@+id/emailLogin" android:layout_alignParentEnd="true"
         android:layout_toEndOf="@+id/textView2"/>
     <Button
+
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+
         android:text="Register"
         android:id="@+id/registerButton"
-        android:layout_below="@+id/passwordLogin" android:layout_centerHorizontal="true"/>
+        android:layout_below="@+id/passwordLogin" android:layout_centerHorizontal="true"
+        android:contentDescription="@string/register_button"
+        />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

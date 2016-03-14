@@ -47,6 +47,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Send Message"
+        android:contentDescription="@string/send_message_button"
         android:id="@+id/button"
         android:layout_alignParentBottom="true" android:layout_alignParentEnd="true"/>
     <EditText
