@@ -15,23 +15,27 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
-        <activity android:name="com.facebook.FacebookActivity"
-                  android:configChanges=
-                      "keyboard|keyboardHidden|screenLayout|screenSize|orientation"
-                  android:theme="@android:style/Theme.Translucent.NoTitleBar"
-                  android:label="@string/app_name" />
-
+        <activity
+            android:name="com.facebook.FacebookActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
-                <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
+
+                <meta-data
+                    android:name="com.facebook.sdk.ApplicationId"
+                    android:value="@string/facebook_app_id"/>
+
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
 
+            <meta-data
+                android:name="com.facebook.sdk.ApplicationId"
+                android:value="@string/facebook_app_id"/>
         </activity>
         <activity
             android:name=".RegisterActivity"
@@ -53,7 +57,6 @@
         <activity
             android:name=".UserProfileActivity"
             android:label="@string/app_name"
-
             android:parentActivityName=".UserListActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -70,25 +73,38 @@
         <activity
             android:name=".MessageActivity"
             android:label="Origin Chat"
-            android:parentActivityName=".UserListActivity"
-          >
+            android:parentActivityName=".UserListActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.benwong.geochat.UserListActivity"/>
         </activity>
 
-        <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
-        <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
-        <activity android:name="com.google.android.gms.ads.AdActivity"  android:theme="@android:style/Theme.Translucent" />
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id"/>
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version"/>
 
-        <receiver android:name=".NewMessageWidget" >
+        <activity
+            android:name="com.google.android.gms.ads.AdActivity"
+            android:theme="@android:style/Theme.Translucent"/>
+
+        <receiver android:name=".NewMessageWidget">
             <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
             </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                       android:resource="@xml/message_widget_info" />
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/message_widget_info"/>
         </receiver>
 
+        <activity
+            android:name=".FavouriteUserActivity"
+            android:label="Origin Chat"
+            >
+        </activity>
     </application>
 
 </manifest>

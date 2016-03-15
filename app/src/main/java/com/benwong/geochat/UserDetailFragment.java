@@ -1,8 +1,12 @@
 package com.benwong.geochat;
 
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -10,9 +14,12 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -50,6 +57,9 @@ public class UserDetailFragment extends Fragment {
     private RecyclerView mMessageRecyclerView;
     int loopCount;
     int loopCount2;
+    private CheckBox favouriteCheckbox;
+    private SQLiteDatabase favouriteDatabase;
+    private Cursor c;
 
     public UserDetailFragment() {
     }
@@ -62,6 +72,60 @@ public class UserDetailFragment extends Fragment {
         usernameTV = (TextView) view.findViewById(R.id.usernameTV);
         descriptionTV = (TextView) view.findViewById(R.id.descriptionTV);
         profilePic = (ImageView) view.findViewById(R.id.imageView2);
+        favouriteCheckbox = (CheckBox)view.findViewById(R.id.favouriteCheckbox);
+
+        favouriteDatabase = getActivity().openOrCreateDatabase("OriginUsers", Context.MODE_PRIVATE, null);
+
+        favouriteDatabase.execSQL("CREATE TABLE IF NOT EXISTS favouriteUsers (userId VARCHAR, id INTEGER PRIMARY KEY)");
+
+        intent = getActivity().getIntent();
+
+        try {
+            c = favouriteDatabase.rawQuery("SELECT * FROM favouriteUsers WHERE userId = ? LIMIT 1", new String[]{intent.getStringExtra("userId")});
+        } catch (Error e) {
+            e.printStackTrace();
+        }
+
+        if (c != null && c.moveToFirst()) {
+            do {
+                favouriteCheckbox.setChecked(true);
+            } while (c.moveToNext());
+        }
+
+
+        favouriteCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    try {
+
+                        favouriteDatabase.execSQL("INSERT INTO favouriteUsers (userId) " +
+                                        "VALUES (" +
+                                        "'" +
+                                        intent.getStringExtra("userId").toString() +
+                                        "'" +
+                                        ")"
+                        );
+
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    favouriteCheckbox.setChecked(true);
+                } else {
+                    try {
+                        favouriteDatabase.execSQL("DELETE FROM favouriteUsers WHERE userId = " + "'" + intent.getStringExtra("userId") + "'" );
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    favouriteCheckbox.setChecked(false);
+
+                }
+            }
+        });
 
         messageET = (EditText) view.findViewById(R.id.messageET);
         messageBtn = (Button) view.findViewById(R.id.button);
@@ -77,41 +141,10 @@ public class UserDetailFragment extends Fragment {
         mMessageRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 //        mMessageRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
 
-        intent = getActivity().getIntent();
+        new FetchUserDetail().execute();
+        new FetchMessage().execute();
 
-        ref = new Firebase("https://originchat.firebaseio.com/users/" + intent.getStringExtra("userId"));
-
-        ref.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-//                System.out.println(dataSnapshot);
-                byte[] imageAsBytes = Base64.decode(String.valueOf(dataSnapshot.child("profilePic").getValue()), Base64.DEFAULT);
-                Bitmap bmp = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
-
-                usernameTV.setText(String.valueOf(dataSnapshot.child("username").getValue()));
-
-                if (bmp != null) {
-                    profilePic.setImageBitmap(bmp);
-                } else {
-                    Bitmap icon = BitmapFactory.decodeResource(getActivity().getResources(),
-                            R.drawable.unknownuser);
-                    profilePic.setImageBitmap(icon);
-                }
-
-                if (dataSnapshot.child("description").getValue() == null || dataSnapshot.child("description").getValue().equals("null")) {
-                    descriptionTV.setText(R.string.no_user_description);
-                } else {
-                    descriptionTV.setText(String.valueOf(dataSnapshot.child("description").getValue()));
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-        messageBtn.setOnClickListener(new View.OnClickListener() {
+        messageBtn.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 ref = new Firebase("https://originchat.firebaseio.com/messages");
@@ -125,95 +158,7 @@ public class UserDetailFragment extends Fragment {
             }
         });
 
-        messageListener = new Firebase("https://originchat.firebaseio.com/messages");
-//        Query queryRef = messageListener.orderByChild("senderId").equalTo(Constant.USERID);
 
-        messageListener.addValueEventListener(new ValueEventListener() {
-
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-//                System.out.println(dataSnapshot);
-//                loopCount = 0;
-                mMessageList.clear();
-//                System.out.println(dataSnapshot);
-////                System.out.println("There are " + dataSnapshot.getChildrenCount() + " messages");
-                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-//                    System.out.println(postSnapshot);
-                    Message facts = postSnapshot.getValue(Message.class);
-                    if (facts.getRecipientId().toString().equals(intent.getStringExtra("userId")) && facts.getSenderId().equals(Constant.USERID) ||
-                            facts.getRecipientId().toString().equals(Constant.USERID) && facts.getSenderId().toString().equals(intent.getStringExtra("userId"))
-                            ) {
-                        System.out.println(facts.getSenderId() + " sent " + facts.getMessage() + " to " + facts.getRecipientId());
-                        Message message = new Message();
-                        message.setDate(facts.getDate());
-                        message.setMessage(facts.getMessage());
-                        message.setRecipientId(facts.getRecipientId());
-                        message.setSenderId(facts.getSenderId());
-                        mMessageList.add(message);
-
-                        if (isAdded()) {
-                            Collections.sort(mMessageList);
-                            mMessageRecyclerView.setAdapter(new MessageAdapter(mMessageList));
-
-                        }
-
-                    }
-//
-                }
-
-//                if (loopCount == mMessageList.size()) {
-//                    System.out.println("loopcount " + loopCount);
-//                    System.out.println("mMessageList " + mMessageList.size());
-//                    nestedMessageListener = new Firebase("https://originchat.firebaseio.com/messages");
-//                    Query nestedQueryRef = nestedMessageListener.orderByChild("recipientId").equalTo(Constant.USERID);
-//                    nestedQueryRef.addValueEventListener(new ValueEventListener() {
-//                        @Override
-//                        public void onDataChange(DataSnapshot dataSnapshot) {
-//                            loopCount2 = 0;
-//                            System.out.println(" nested datasnapshot " + dataSnapshot);
-//                            for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-//                                Message facts = postSnapshot.getValue(Message.class);
-//                                if (facts.getSenderId().toString().equals(intent.getStringExtra("userId"))) {
-//                                    Message message = new Message();
-//                                    message.setDate(facts.getDate());
-//                                    message.setMessage(facts.getMessage());
-//                                    message.setRecipientId(facts.getRecipientId());
-//                                    message.setSenderId(facts.getSenderId());
-//                                    mMessageList.add(message);
-//                                    mMessageListHolder.add(message);
-//                                    loopCount2++;
-//
-//
-//                                }
-//                            }
-//                        }
-//
-//                        @Override
-//                        public void onCancelled(FirebaseError firebaseError) {
-//
-//                        }
-//
-//                    });
-//                }
-
-//
-//                if (loopCount2 == mMessageListHolder.size()) {
-//                    System.out.println("loopcount2 " + loopCount);
-//                    System.out.println("datasnapshotcount " + dataSnapshot.getChildrenCount());
-//                    System.out.println(mMessageList.size() + "size of messageList");
-//                    if (isAdded()) {
-//                        Collections.sort(mMessageList);
-//                        mMessageRecyclerView.setAdapter(new MessageAdapter(mMessageList));
-//
-//                    }
-//                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
 
 
         return view;
@@ -228,7 +173,7 @@ public class UserDetailFragment extends Fragment {
     }
 
     //Create holder to put in adapter
-    class MessageHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    class MessageHolder extends RecyclerView.ViewHolder implements OnClickListener {
 
         private Message mMessage;
         TextView mSenderTV;
@@ -301,6 +246,96 @@ public class UserDetailFragment extends Fragment {
             return mMessageItems.size();
         }
     }
+
+    private class FetchMessage extends AsyncTask<Void, Void, Void>{
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            messageListener = new Firebase("https://originchat.firebaseio.com/messages");
+//        Query queryRef = messageListener.orderByChild("senderId").equalTo(Constant.USERID);
+            messageListener.addValueEventListener(new ValueEventListener() {
+
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+//                System.out.println(dataSnapshot);
+//                loopCount = 0;
+                    mMessageList.clear();
+//                System.out.println(dataSnapshot);
+////                System.out.println("There are " + dataSnapshot.getChildrenCount() + " messages");
+                    for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+//                    System.out.println(postSnapshot);
+                        Message facts = postSnapshot.getValue(Message.class);
+                        if (facts.getRecipientId().toString().equals(intent.getStringExtra("userId")) && facts.getSenderId().equals(Constant.USERID) ||
+                                facts.getRecipientId().toString().equals(Constant.USERID) && facts.getSenderId().toString().equals(intent.getStringExtra("userId"))
+                                ) {
+                            System.out.println(facts.getSenderId() + " sent " + facts.getMessage() + " to " + facts.getRecipientId());
+                            Message message = new Message();
+                            message.setDate(facts.getDate());
+                            message.setMessage(facts.getMessage());
+                            message.setRecipientId(facts.getRecipientId());
+                            message.setSenderId(facts.getSenderId());
+                            mMessageList.add(message);
+
+                            if (isAdded()) {
+                                Collections.sort(mMessageList);
+                                mMessageRecyclerView.setAdapter(new MessageAdapter(mMessageList));
+
+                            }
+                        }
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+            return null;
+        }
+    }
+
+    private class FetchUserDetail extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            intent = getActivity().getIntent();
+
+            ref = new Firebase("https://originchat.firebaseio.com/users/" + intent.getStringExtra("userId"));
+
+            ref.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+//                System.out.println(dataSnapshot);
+                    byte[] imageAsBytes = Base64.decode(String.valueOf(dataSnapshot.child("profilePic").getValue()), Base64.DEFAULT);
+                    Bitmap bmp = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
+
+                    usernameTV.setText(String.valueOf(dataSnapshot.child("username").getValue()));
+
+                    if (bmp != null) {
+                        profilePic.setImageBitmap(bmp);
+                    } else {
+                        Bitmap icon = BitmapFactory.decodeResource(getActivity().getResources(),
+                                R.drawable.unknownuser);
+                        profilePic.setImageBitmap(icon);
+                    }
+
+                    if (dataSnapshot.child("description").getValue() == null || dataSnapshot.child("description").getValue().equals("null")) {
+                        descriptionTV.setText(R.string.no_user_description);
+                    } else {
+                        descriptionTV.setText(String.valueOf(dataSnapshot.child("description").getValue()));
+                    }
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+            return null;
+        }
+    }
+
 
 
 }

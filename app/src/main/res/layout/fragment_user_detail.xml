@@ -37,12 +37,11 @@
     <android.support.v7.widget.RecyclerView
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/fragment_message_recycler_view"
-        android:layout_marginTop="10dp"
         android:layout_marginBottom="10dp"
         android:layout_width="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/imageView2" android:layout_above="@+id/messageET"/>
+        android:layout_above="@+id/messageET" android:layout_below="@+id/favouriteCheckbox"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -56,4 +55,10 @@
         android:id="@+id/messageET" android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true" android:layout_toStartOf="@+id/button"
         android:hint="Send a Message"/>
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Favourite"
+        android:id="@+id/favouriteCheckbox" android:layout_below="@+id/imageView2"
+        android:layout_alignParentStart="true" android:checked="false"/>
 </RelativeLayout>

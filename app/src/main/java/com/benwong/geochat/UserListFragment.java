@@ -13,6 +13,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -85,16 +86,11 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
         usernameTV = (TextView) view.findViewById(R.id.usernameTV);
 
 
-
-
-
         // get value from the distance sort
         SharedPreferences prefs = getContext().getSharedPreferences("locationSortPreference", Context.MODE_PRIVATE);
         value = prefs.getInt("seekBarValue", 0); // 0 is default
 
-
         geoFire = new GeoFire(new Firebase("https://originchat.firebaseio.com/locations/"));
-
 
         intent = getActivity().getIntent();
 
@@ -104,7 +100,6 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
         profileImageView = (ImageView) view.findViewById(R.id.imageView);
 
         nearByUsersList = new ArrayList<User>();
-
 
         mPhotoRecyclerView = (RecyclerView) view.findViewById(R.id.fragment_photo_gallery_recycler_view);
         mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 4));
@@ -168,244 +163,269 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
             });
 
         }
+        new FetchUserCountry().execute();
 
-        ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID);
-        //query for user's home country
 
-        ref.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                try {
-                    if (dataSnapshot.child("country").getValue() == null || dataSnapshot.child("username").getValue() == null) {
-                        Intent intent = new Intent(getActivity(), UserProfileActivity.class);
-                        startActivity(intent);
-                    } else {
-                        country.setText(String.valueOf(dataSnapshot.child("country").getValue()));
-                        usernameTV.setText(String.valueOf(dataSnapshot.child("username").getValue()));
-                        Constant.USERCOUNTRY = String.valueOf(dataSnapshot.child("country").getValue());
-                        queryForUsers(String.valueOf(dataSnapshot.child("country").getValue()));
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
         return view;
     }
 
-    private void queryForUsers(final String userCountry) {
-        nearByUsersList.clear();
-        //query geolocation to find nearbyUsers
-        GeoLocation center;
-        if (location != null) {
-            // use user's GPS to determine location if GPS it turned on
-            center = new GeoLocation(location.getLatitude(), location.getLongitude());
-        } else {
-            // use user's previous location to determine location if GPS is turned off
-            center = new GeoLocation(userLocation.getLatitude(), userLocation.getLongitude());
+
+    @Override
+    public void onClick(View v) {
+
+    }
+
+    //query for user's country in the background, if none is set, force them to register for one
+    private class FetchUserCountry extends AsyncTask<Void, Void, Void>{
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            ref = new Firebase("https://originchat.firebaseio.com/users/" + Constant.USERID);
+            //query for user's home country
+
+            ref.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    try {
+                        if (dataSnapshot.child("country").getValue() == null || dataSnapshot.child("username").getValue() == null) {
+                            Intent intent = new Intent(getActivity(), UserProfileActivity.class);
+                            startActivity(intent);
+                        } else {
+                            country.setText(String.valueOf(dataSnapshot.child("country").getValue()));
+                            usernameTV.setText(String.valueOf(dataSnapshot.child("username").getValue()));
+                            Constant.USERCOUNTRY = String.valueOf(dataSnapshot.child("country").getValue());
+//                        queryForUsers(String.valueOf(dataSnapshot.child("country").getValue()));
+                            //put the userQuerying in an asyncTask so it doesn't block the UI
+                            new FetchUserList(String.valueOf(dataSnapshot.child("country").getValue())).execute();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+            return null;
         }
+    }
+
+    private class FetchUserList extends AsyncTask<Void, Void, Void>{
+        private String mUserCountry;
+
+        public FetchUserList(String userCountry){
+            mUserCountry = userCountry;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            nearByUsersList.clear();
+            //query geolocation to find nearbyUsers
+            GeoLocation center;
+            if (location != null) {
+                // use user's GPS to determine location if GPS it turned on
+                center = new GeoLocation(location.getLatitude(), location.getLongitude());
+            } else {
+                // use user's previous location to determine location if GPS is turned off
+                center = new GeoLocation(userLocation.getLatitude(), userLocation.getLongitude());
+            }
 //
 //        //query geolocation to find nearbyUsers
-        geoQuery = geoFire.queryAtLocation(center, value);
-        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
-            @Override
-            public void onKeyEntered(String username, final GeoLocation nearbyLocation) {
+            geoQuery = geoFire.queryAtLocation(center, value);
+            geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+                @Override
+                public void onKeyEntered(String username, final GeoLocation nearbyLocation) {
 
 //                System.out.println(username + nearbyLocation);
-                //query by country within the list of nearby users
-                ref = new Firebase("https://originchat.firebaseio.com/users/" + username);
+                    //query by country within the list of nearby users
+                    ref = new Firebase("https://originchat.firebaseio.com/users/" + username);
 
-                ref.addValueEventListener(new ValueEventListener() {
+                    ref.addValueEventListener(new ValueEventListener() {
 
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
 
 //                        System.out.println(dataSnapshot.child("country").getValue());
-                        try {
-                            if (dataSnapshot.child("country").getValue().toString().equals(userCountry) && !(dataSnapshot.getKey().toString().equals(Constant.USERID))) {
-                                final User usersFromHome = new User();
-                                usersFromHome.setCountry(String.valueOf(dataSnapshot.child("country").getValue()));
-                                usersFromHome.setEmail(String.valueOf(dataSnapshot.child("email").getValue()));
-                                usersFromHome.setUserId(dataSnapshot.getKey());
-                                usersFromHome.setImage(String.valueOf(dataSnapshot.child("profilePic").getValue()));
-                                usersFromHome.setUsername(String.valueOf(dataSnapshot.child("username").getValue()));
-                                usersFromHome.setUserLatitude(String.valueOf(nearbyLocation.latitude));
-                                usersFromHome.setUserLongitude(String.valueOf(nearbyLocation.longitude));
+                            try {
+                                if (dataSnapshot.child("country").getValue().toString().equals(mUserCountry) && !(dataSnapshot.getKey().toString().equals(Constant.USERID))) {
+                                    final User usersFromHome = new User();
+                                    usersFromHome.setCountry(String.valueOf(dataSnapshot.child("country").getValue()));
+                                    usersFromHome.setEmail(String.valueOf(dataSnapshot.child("email").getValue()));
+                                    usersFromHome.setUserId(dataSnapshot.getKey());
+                                    usersFromHome.setImage(String.valueOf(dataSnapshot.child("profilePic").getValue()));
+                                    usersFromHome.setUsername(String.valueOf(dataSnapshot.child("username").getValue()));
+                                    usersFromHome.setUserLatitude(String.valueOf(nearbyLocation.latitude));
+                                    usersFromHome.setUserLongitude(String.valueOf(nearbyLocation.longitude));
 
-                                //calculates distance to from the current user to the list of other nearby users
-                                if (location != null) {
+                                    //calculates distance to from the current user to the list of other nearby users
+                                    if (location != null) {
 //                                    System.out.println("location if gps is off" + userLocation.getLatitude() + " " + userLocation.getLongitude());
-                                    Location loc = new Location("");
-                                    loc.setLatitude(nearbyLocation.latitude);
-                                    loc.setLongitude(nearbyLocation.longitude);
-                                    distanceToUser = userLocation.distanceTo(loc) / 1000;
-                                    usersFromHome.setDistanceToUser(distanceToUser);
+                                        Location loc = new Location("");
+                                        loc.setLatitude(nearbyLocation.latitude);
+                                        loc.setLongitude(nearbyLocation.longitude);
+                                        distanceToUser = userLocation.distanceTo(loc) / 1000;
+                                        usersFromHome.setDistanceToUser(distanceToUser);
 
-                                } else {
-                                    // if location is not available, query for user's previous location
-                                    queryPreviousLocation = new Firebase("https://originchat.firebaseio.com/locations/" + Constant.USERID);
-                                    queryPreviousLocation.addValueEventListener(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(DataSnapshot dataSnapshot) {
+                                    } else {
+                                        // if location is not available, query for user's previous location
+                                        queryPreviousLocation = new Firebase("https://originchat.firebaseio.com/locations/" + Constant.USERID);
+                                        queryPreviousLocation.addValueEventListener(new ValueEventListener() {
+                                            @Override
+                                            public void onDataChange(DataSnapshot dataSnapshot) {
 
-                                            userLocation.setLatitude((Double) dataSnapshot.child("l").child("0").getValue());
-                                            userLocation.setLongitude((Double) dataSnapshot.child("l").child("1").getValue());
+                                                userLocation.setLatitude((Double) dataSnapshot.child("l").child("0").getValue());
+                                                userLocation.setLongitude((Double) dataSnapshot.child("l").child("1").getValue());
 
-                                            Location loc = new Location("");
-                                            loc.setLatitude(nearbyLocation.latitude);
-                                            loc.setLongitude(nearbyLocation.longitude);
-                                            distanceToUser = userLocation.distanceTo(loc) / 1000;
-                                            usersFromHome.setDistanceToUser(distanceToUser);
+                                                Location loc = new Location("");
+                                                loc.setLatitude(nearbyLocation.latitude);
+                                                loc.setLongitude(nearbyLocation.longitude);
+                                                distanceToUser = userLocation.distanceTo(loc) / 1000;
+                                                usersFromHome.setDistanceToUser(distanceToUser);
 
 //                                            System.out.println("Distance to user " + usersFromHome.getId() + "  " +
 //                                                    usersFromHome.getUserLatitude() + " " + usersFromHome.getUserLongitude() + " "
 //                                                    + userLocation.getLatitude() + " " + userLocation.getLongitude() + " " +  usersFromHome.getDistanceToUser());
 //
-                                        }
+                                            }
 
-                                        @Override
-                                        public void onCancelled(FirebaseError firebaseError) {
+                                            @Override
+                                            public void onCancelled(FirebaseError firebaseError) {
 
-                                        }
-                                    });
+                                            }
+                                        });
 
-                                }
+                                    }
 
 
 //                                System.out.println("nearByUsers " + usersFromHome.getEmail() + " is from " + usersFromHome.getCountry() + " is " + distanceToUser + " km away");
-                                nearByUsersList.add(usersFromHome);
+                                    nearByUsersList.add(usersFromHome);
 
-                                //putting items into an individual holder which gets fed into an adapter
-                                class UserHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+                                    //putting items into an individual holder which gets fed into an adapter
+                                    class UserHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-                                    private User mUser;
-                                    TextView mCountryTV;
-                                    TextView mDistanceAway;
-                                    ImageView mProfilePic;
-                                    TextView mUsername;
+                                        private User mUser;
+                                        TextView mCountryTV;
+                                        TextView mDistanceAway;
+                                        ImageView mProfilePic;
+                                        TextView mUsername;
 
-                                    public UserHolder(View itemView) {
-                                        super(itemView);
+                                        public UserHolder(View itemView) {
+                                            super(itemView);
 
-                                        itemView.setOnClickListener(this);
-                                        mCountryTV = (TextView) itemView.findViewById(R.id.usernameTV);
+                                            itemView.setOnClickListener(this);
+                                            mCountryTV = (TextView) itemView.findViewById(R.id.usernameTV);
 
-                                        mDistanceAway = (TextView) itemView.findViewById(R.id.distanceAwayTV);
-                                        mProfilePic = (ImageView) itemView.findViewById(R.id.imageView);
-                                        mUsername = (TextView) itemView.findViewById(R.id.usernameTV);
-                                    }
-
-                                    public void bindUserItem(User user) {
-                                        mUser = user;
-                                        byte[] imageAsBytes = Base64.decode(user.getImage(), Base64.DEFAULT);
-                                        Bitmap bmp = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
-                                        mUsername.setText(user.getUsername());
-                                        if (bmp != null) {
-                                            mProfilePic.setImageBitmap(bmp);
-                                        } else {
-                                            Bitmap icon = BitmapFactory.decodeResource(getActivity().getResources(),
-                                                    R.drawable.unknownuser);
-                                            mProfilePic.setImageBitmap(icon);
+                                            mDistanceAway = (TextView) itemView.findViewById(R.id.distanceAwayTV);
+                                            mProfilePic = (ImageView) itemView.findViewById(R.id.imageView);
+                                            mUsername = (TextView) itemView.findViewById(R.id.usernameTV);
                                         }
+
+                                        public void bindUserItem(User user) {
+                                            mUser = user;
+                                            byte[] imageAsBytes = Base64.decode(user.getImage(), Base64.DEFAULT);
+                                            Bitmap bmp = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
+                                            mUsername.setText(user.getUsername());
+                                            if (bmp != null) {
+                                                mProfilePic.setImageBitmap(bmp);
+                                            } else {
+                                                Bitmap icon = BitmapFactory.decodeResource(getActivity().getResources(),
+                                                        R.drawable.unknownuser);
+                                                mProfilePic.setImageBitmap(icon);
+                                            }
 
 //                                        System.out.println("Distance to user in bindUserItem " + user.getId() + "  " + user.getUserLatitude() + " " + user.getUserLongitude() + " " + user.getDistanceToUser());
 
-                                        if (user.getDistanceToUser() == null || user.getDistanceToUser().equals(null)) {
-                                            mDistanceAway.setText(R.string.null_distance_warning);
-                                        } else {
-                                            String formattedDistance = String.format("%.2f", user.getDistanceToUser());
-                                            mDistanceAway.setText(formattedDistance + " km away");
+                                            if (user.getDistanceToUser() == null || user.getDistanceToUser().equals(null)) {
+                                                mDistanceAway.setText(R.string.null_distance_warning);
+                                            } else {
+                                                String formattedDistance = String.format("%.2f", user.getDistanceToUser());
+                                                mDistanceAway.setText(formattedDistance + " km away");
+                                            }
+
                                         }
 
+                                        @Override
+                                        public void onClick(View v) {
+                                            Intent intent = new Intent(getActivity(), UserDetailActivity.class);
+                                            intent.putExtra("userId", mUser.getId());
+                                            startActivity(intent);
+                                        }
                                     }
 
-                                    @Override
-                                    public void onClick(View v) {
-                                        Intent intent = new Intent(getActivity(), UserDetailActivity.class);
-                                        intent.putExtra("userId", mUser.getId());
-                                        startActivity(intent);
-                                    }
-                                }
+                                    class UserAdapter extends RecyclerView.Adapter<UserHolder> {
 
-                                class UserAdapter extends RecyclerView.Adapter<UserHolder> {
+                                        private List<User> mUserItems;
 
-                                    private List<User> mUserItems;
+                                        public UserAdapter(List<User> userItems) {
+                                            mUserItems = userItems;
+                                        }
 
-                                    public UserAdapter(List<User> userItems) {
-                                        mUserItems = userItems;
-                                    }
-
-                                    @Override
-                                    public UserHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+                                        @Override
+                                        public UserHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
 //                                TextView textView = new TextView(getActivity());
-                                        LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
-                                        View view = layoutInflater.inflate(R.layout.list_item_user, viewGroup, false);
-                                        return new UserHolder(view);
+                                            LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
+                                            View view = layoutInflater.inflate(R.layout.list_item_user, viewGroup, false);
+                                            return new UserHolder(view);
+                                        }
+
+                                        @Override
+                                        public void onBindViewHolder(UserHolder userHolder, int position) {
+                                            User userItem = mUserItems.get(position);
+                                            userHolder.bindUserItem(userItem);
+                                        }
+
+                                        @Override
+                                        public int getItemCount() {
+                                            return mUserItems.size();
+                                        }
                                     }
 
-                                    @Override
-                                    public void onBindViewHolder(UserHolder userHolder, int position) {
-                                        User userItem = mUserItems.get(position);
-                                        userHolder.bindUserItem(userItem);
-                                    }
-
-                                    @Override
-                                    public int getItemCount() {
-                                        return mUserItems.size();
+                                    if (isAdded()) {
+                                        Collections.sort(nearByUsersList);
+                                        mPhotoRecyclerView.setAdapter(new UserAdapter(nearByUsersList));
                                     }
                                 }
-
-                                if (isAdded()) {
-                                    Collections.sort(nearByUsersList);
-                                    mPhotoRecyclerView.setAdapter(new UserAdapter(nearByUsersList));
-                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
                             }
-                        } catch (Exception e) {
-                            e.printStackTrace();
                         }
-                    }
 
-                    @Override
-                    public void onCancelled(FirebaseError firebaseError) {
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
 
-                    }
-                });
+                        }
+                    });
 
-            }
+                }
 
-            @Override
-            public void onKeyExited(String username) {
-                nearByUsersList.remove(username);
-                // additional code, like removing a pin from the map
-                // and removing any Firebase listener for this user
-            }
+                @Override
+                public void onKeyExited(String username) {
+                    nearByUsersList.remove(username);
+                    // additional code, like removing a pin from the map
+                    // and removing any Firebase listener for this user
+                }
 
-            @Override
-            public void onKeyMoved(String s, GeoLocation geoLocation) {
+                @Override
+                public void onKeyMoved(String s, GeoLocation geoLocation) {
 
-            }
+                }
 
-            @Override
-            public void onGeoQueryReady() {
+                @Override
+                public void onGeoQueryReady() {
 
-            }
+                }
 
-            @Override
-            public void onGeoQueryError(FirebaseError firebaseError) {
+                @Override
+                public void onGeoQueryError(FirebaseError firebaseError) {
 
-            }
+                }
 
-        });
-    }
+            });
 
-    @Override
-    public void onClick(View v) {
-
+            return null;
+        }
     }
 
     @Override

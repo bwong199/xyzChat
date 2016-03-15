@@ -16,6 +16,10 @@
           android:orderInCategory="100"
           android:title="Messages"
           app:showAsAction="never"/>
+    <item android:id="@+id/favouriteUsers"
+          android:orderInCategory="100"
+          android:title="Favourite Users"
+          app:showAsAction="never"/>
     <item android:id="@+id/signOut"
           android:orderInCategory="100"
           android:title="Sign Out"

@@ -82,6 +82,12 @@ public abstract class SingleFragmentActivity extends AppCompatActivity {
             return true;
         }
 
+        if(id == R.id.favouriteUsers){
+            Intent intent = new Intent(getApplicationContext(), FavouriteUserActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 }
