@@ -19,6 +19,16 @@ android {
         multiDexEnabled true
         versionName "1.0"
     }
+
+    signingConfigs {
+        release {
+            storeFile file("/Users/bwong/Google_Drive/originChat.jks")
+            storePassword "Wongbmw1"
+            keyAlias "bwong"
+            keyPassword "Wongbmw1"
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false

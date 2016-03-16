@@ -1,7 +1,9 @@
 package com.benwong.geochat;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -12,7 +14,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -45,7 +46,7 @@ public class FavouriteUserFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_favourite_user, container, false);
 
         favouriteUserList = new ArrayList<String>();
-        favouriteUserNames= new ArrayList<String>();
+        favouriteUserNames = new ArrayList<String>();
         favouriteUserListView = (ListView) view.findViewById(R.id.listView);
 
 
@@ -80,47 +81,58 @@ public class FavouriteUserFragment extends Fragment {
             } while (c.moveToNext());
         }
 
-        for (String eachUser : favouriteUserList) {
-            System.out.println("each user in favouritelist " + eachUser);
+        new FetchFavouriteUsers().execute();
 
-            ref = new Firebase("https://originchat.firebaseio.com/users/" + eachUser);
 
-            ref.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    System.out.println("added " + dataSnapshot.child("username").getValue());
+        return view;
+    }
 
-                    if(dataSnapshot.child("username").getValue() != null){
-                        favouriteUserNames.add(String.valueOf(dataSnapshot.child("username").getValue()));
+    private class FetchFavouriteUsers extends AsyncTask<Void, Void, Void>{
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            for (String eachUser : favouriteUserList) {
+                System.out.println("each user in favouritelist " + eachUser);
+
+                ref = new Firebase("https://originchat.firebaseio.com/users/" + eachUser);
+
+                ref.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        System.out.println("added " + dataSnapshot.child("username").getValue());
+
+                        if (dataSnapshot.child("username").getValue() != null) {
+                            favouriteUserNames.add(String.valueOf(dataSnapshot.child("username").getValue()));
+
+                        }
+
+                        arrayAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, favouriteUserNames);
+
+                        favouriteUserListView.setAdapter(arrayAdapter);
+
+
+                        favouriteUserListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                            @Override
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                            Toast.makeText(getContext(), favouriteUserList.get(position), Toast.LENGTH_LONG).show();
+                                Intent intent = new Intent(getActivity(), UserDetailActivity.class);
+                                intent.putExtra("userId", favouriteUserList.get(position));
+                                startActivity(intent);
+                            }
+                        });
+
                     }
 
-                    arrayAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, favouriteUserNames);
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
 
-                    favouriteUserListView.setAdapter(arrayAdapter);
-
-
-                    favouriteUserListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                        @Override
-                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                            Toast.makeText(getContext(), favouriteUserNames.get(position), Toast.LENGTH_LONG).show();
-                        }
-                    });
-
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-
-                }
-            });
+                    }
+                });
 
 
+            }
+            return null;
         }
-
-
-
-
-    return view;
-}
+    }
 
 }

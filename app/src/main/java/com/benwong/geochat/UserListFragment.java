@@ -133,36 +133,38 @@ public class UserListFragment extends Fragment implements View.OnClickListener, 
                 e.printStackTrace();
             }
         } else {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1, 0.0f, this);
-            Toast.makeText(getActivity(), R.string.no_gps_warning, Toast.LENGTH_LONG).show();
-            // query for signed-in user's last location if currrent location doesn't exist so app can still find nearby users if GPS is turned off
-            queryPreviousLocation = new Firebase("https://originchat.firebaseio.com/locations/" + Constant.USERID);
-            queryPreviousLocation.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
+            try {
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1, 0.0f, this);
+                Toast.makeText(getActivity(), R.string.no_gps_warning, Toast.LENGTH_LONG).show();
+                // query for signed-in user's last location if currrent location doesn't exist so app can still find nearby users if GPS is turned off
+                queryPreviousLocation = new Firebase("https://originchat.firebaseio.com/locations/" + Constant.USERID);
+                queryPreviousLocation.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
 //                    System.out.println("user location " + dataSnapshot);
 //                    System.out.println("user location " + dataSnapshot.child("l").child("0").getValue());
 //                    System.out.println("user location " + dataSnapshot.child("l").child("1").getValue());
-                    try{
-                        userLocation = new Location("");
-                        userLocation.setLatitude((Double) dataSnapshot.child("l").child("0").getValue());
-                        userLocation.setLongitude((Double) dataSnapshot.child("l").child("1").getValue());
-                        setAddress(userLocation);
-                    }catch (Exception e){
-                        e.printStackTrace();
+                        try {
+                            userLocation = new Location("");
+                            userLocation.setLatitude((Double) dataSnapshot.child("l").child("0").getValue());
+                            userLocation.setLongitude((Double) dataSnapshot.child("l").child("1").getValue());
+                            setAddress(userLocation);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+
                     }
 
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
 
-
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-
-                }
-            });
-
-        }
+                    }
+                });
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+                    }
         new FetchUserCountry().execute();
 
 
