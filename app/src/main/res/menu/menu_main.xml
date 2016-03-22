@@ -12,6 +12,8 @@
           android:orderInCategory="100"
           android:title="User Profile"
           app:showAsAction="never"/>
+
+
     <item android:id="@+id/myMessages"
           android:orderInCategory="100"
           android:title="Messages"
@@ -20,6 +22,18 @@
           android:orderInCategory="100"
           android:title="Favourite Users"
           app:showAsAction="never"/>
+
+    <item android:id="@+id/toDoList"
+          android:orderInCategory="100"
+          android:title="To Do"
+          app:showAsAction="never"/>
+    <item
+        android:id="@+id/insert"
+        android:showAsAction="never"
+        android:title="Insert">
+    </item>
+
+
     <item android:id="@+id/signOut"
           android:orderInCategory="100"
           android:title="Sign Out"

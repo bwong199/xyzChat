@@ -24,4 +24,19 @@
     <string name="send_message_button">Send Message</string>
     <string name="save_profile_button">Save Profile Button</string>
     <string name="title_activity_favourite_user">FavouriteUserActivity</string>
+    <string name="title_activity_todos_overview">TodosOverviewActivity</string>
+
+    <string name="no_todos">Currently there are no Todo items maintained</string>
+    <string name="menu_insert">Add Item</string>
+    <string name="menu_delete">Delete Todo</string>
+    <string name="todo_summary">Summary</string>
+    <string name="todo_description">Delete Todo</string>
+    <string name="todo_edit_summary">Summary</string>
+    <string name="todo_edit_description">Description</string>
+    <string name="todo_edit_confirm">Confirm</string>
+
+    <string-array name="priorities">
+        <item>Urgent</item>
+        <item>Reminder</item>
+    </string-array>
 </resources>

@@ -102,9 +102,23 @@
 
         <activity
             android:name=".FavouriteUserActivity"
-            android:label="Origin Chat"
-            >
+            android:label="Origin Chat">
         </activity>
+
+
+        <activity
+            android:name=".TodosOverviewActivity"
+            android:label="@string/app_name" >
+        </activity>
+        <activity
+            android:name=".TodoDetailActivity"
+            android:windowSoftInputMode="stateVisible|adjustResize" >
+        </activity>
+
+        <provider
+            android:name=".MyTodoContentProvider"
+            android:authorities="de.vogella.android.todos.contentprovider" >
+        </provider>
     </application>
 
 </manifest>

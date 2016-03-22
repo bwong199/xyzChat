@@ -88,6 +88,20 @@ public abstract class SingleFragmentActivity extends AppCompatActivity {
             return true;
         }
 
+
+
+        if(id == R.id.toDoList){
+            Intent intent = new Intent(getApplicationContext(), TodosOverviewActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
+        if(id == R.id.insert){
+            Intent intent = new Intent(getApplicationContext(), TodoDetailActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 }
